@@ -1,0 +1,13 @@
+{
+    "Name": "Sagnik Roy",
+    "Address": "Bhalobasa, Roshna, Pandua, Hooghly, 712149",
+    "Phone": "+91 7076404580",
+    "Email": "sagnikroyofficial24@gmail.com",
+    "LinkedIn": "https://www.linkedin.com/in/sagnik-roy-b39218192/ ",
+    "Objective": "Dynamic software Engineer specializing in automation testing and quality assurance. Expert in developing and executing automated test scripts using selenium webdriver and Java. Skilled in API automaion with frameworks like rest assured and Karate. Proficient in integrating Cucumber BDD for improved collaboration between technical and non-technical stakeholders. Proven track record of enchancing software quality and reducing regression testing time by 30% through robust automation soluions. Strong Problem solving ablities and experience with agile methodologies.",
+    "Experience": "Senior Software engineer A5, Capgemini SE",
+    "Projects": "Apollo 247, IRCTC automation, Excel Reconciliation engine, ML Captcha solver",
+    "Education": "Bachelor of Mechanical Engineering, Academy of Technology, MAKAUT, 06/2022 ",
+    "Skills": "Java, C, Python, Selenium webdriver, RestAssured, TestNG, JUnit, Cucumber BDD, Karate framework. Test script development, Creating test cases, Manual Testing, Black Box testing, white box testing, functional testing, regression testing, automated testing, automated api testing, MySQL, Oracle SQL, Scrum, Git, GitHub, Jira, ADO",
+    "Certifications": "SAFE 6 practioner"
+}
