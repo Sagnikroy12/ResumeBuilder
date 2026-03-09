@@ -1,23 +1,106 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <title>Resume Builder</title>
-</head>
-<body>
+  <head>
+    <meta charset="utf-8" />
+
+    <style>
+      body {
+        font-family: Arial;
+        margin: 30px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        margin-bottom: 12px;
+      }
+
+      button {
+        padding: 8px 15px;
+        margin-top: 10px;
+      }
+
+      .exp-block {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+
+  <body>
     <h2>Resume Builder</h2>
-    <form method="post">
-        Name: <input type="text" name="name"><br>
-        Address: <input type="text" name="address"><br>
-        Phone: <input type="text" name="phone"><br>
-        Email: <input type="text" name="email"><br>
-        LinkedIn: <input type="text" name="linkedin"><br>
-        Objective: <input type="text" name="objective"><br>
-        Education: <input type="text" name="education"><br>
-        Skills: <input type="text" name="skills"><br>
-        Experience: <input type="text" name="experience"><br>
-        Projects: <input type="text" name="projects"><br>
-        Certifications: <input type="text" name="certifications"><br>
-        <input type="submit" value="Submit">
+
+    <form method="POST">
+      Name<input name="name" />
+
+      Address
+      <input name="address" />
+
+      Phone
+      <input name="phone" />
+
+      Email
+      <input name="email" />
+
+      LinkedIn
+      <input name="linkedin" />
+
+      Objective
+      <textarea name="objective"></textarea>
+
+      Education
+      <textarea name="education"></textarea>
+
+      Skills
+      <textarea name="skills"></textarea>
+
+      Projects
+      <textarea name="projects"></textarea>
+
+      Certifications
+      <textarea name="certifications"></textarea>
+
+      <h3>Experience</h3>
+
+      <div id="experience-container"></div>
+
+      <button type="button" onclick="addExperience()">+ Add Experience</button>
+
+      <br /><br />
+
+      <button type="submit">Generate Resume</button>
     </form>
-</body>
+
+    <script>
+      function addExperience() {
+        const container = document.getElementById("experience-container");
+
+        const block = document.createElement("div");
+
+        block.className = "exp-block";
+
+        block.innerHTML = `
+
+Title / Role
+<input name="exp_title[]">
+
+Duration
+<input name="exp_duration[]">
+
+Responsibilities
+<textarea name="exp_points[]" placeholder="One point per line"></textarea>
+
+<button type="button" onclick="this.parentElement.remove()">Remove</button>
+
+`;
+
+        container.appendChild(block);
+      }
+
+      addExperience();
+    </script>
+  </body>
 </html>
