@@ -1,60 +1,105 @@
 import json
+import re
 from fpdf import FPDF
 
-name =input("Enter your name: ")
-address =input("Enter your address: ")
-phone =input("Enter your phone number: ")
-email =input("Enter your email: ")
-linkedIn =input("Enter your LinkedIn profile URL: ")
-objective =input("Enter your career objective: ")
-education =input("Enter your educational qualifications: ")
-skills =input("Enter your skills: ")
-experience =input("Enter your work experience: ")
-projects =input("Enter your projects: ")
-certifications =input("Enter your certifications: ")
 
-resume_data = {
-    "Name": name,
-    "Address": address,
-    "Phone": phone,
-    "Email": email,
-    "LinkedIn": linkedIn,
-    "Objective": objective,
-    "Experience": experience,
-    "Projects": projects,
-    "Education": education,
-    "Skills": skills,
-    "Certifications": certifications,
-}
+class ResumePDF(FPDF):
 
-with open("resume.json", "w") as json_file:
-    json.dump(resume_data, json_file, indent=4)
+    def header_section(self, data):
+        self.set_font("Times", "B", 20)
+        self.cell(0, 10, data["Name"], ln=True, align="C")
 
-print("Resume data has been saved to resume.json")
+        self.set_font("Times", size=11)
+        contact = f"{data['Address']}\n{data['Phone']} | {data['Email']}\n{data['LinkedIn']}"
+        self.multi_cell(0, 8, contact, align="C")
 
-with open("resume.json", "r") as json_file:
-    data = json.load(json_file)
+        self.ln(5)
 
-pdf = FPDF()
-pdf.add_page()
+    def add_section(self, title, content):
+        if not content:
+            return
 
-pdf.set_font("Times", 'B', size=18)
-pdf.cell(0, 10, txt=f"{name}", ln=True, align='C')
-pdf.set_font("Times", 'B', size=12)
-pdf.cell(0, 10, txt=f"{resume_data['Address']}      {resume_data['Phone']}      {resume_data['Email']}", ln=True, align='C')
-pdf.cell(0, 10, txt=f"{resume_data['LinkedIn']}", ln=True, align='C')
+        # Section Title
+        self.set_font("Times", "B", 14)
+        self.cell(0, 10, title, ln=True)
+
+        self.set_font("Times", size=12)
+
+        # Normalize different bullet characters
+        bullet_patterns = ["\uf0b7","","•","●","▪","◦","–","—","-"]
+
+        for bullet in bullet_patterns:
+            content = content.replace(bullet, "\n")
+
+        # Replace multiple spaces with newline
+        content = re.sub(r"\s{2,}", "\n", content)
+
+        # Split into lines
+        items = [line.strip() for line in content.split("\n") if line.strip()]
+
+        # Print bullet points
+        for item in items:
+            self.cell(8)
+            self.multi_cell(0, 8, f"• {item}")
+
+        self.ln(2)
 
 
-for key, value in data.items():
-    pdf.set_font("Times", 'B', size=12)
-    if(key in ["Name", "Address", "Phone", "Email", "LinkedIn"]):
-        continue
-    else:
-        pdf.set_font("Times", 'B', size=16)
-        pdf.cell(0, 10, txt=f"{key}:", ln=True, align='L')
-        pdf.set_font("Arial", size=12)
-        pdf.multi_cell(0, 10, txt=f"{value}", align='JUSTIFY')
+def collect_user_input():
+    print("\nEnter your resume details:\n")
 
-pdf.output("resume.pdf")
+    return {
+        "Name": input("Name: "),
+        "Address": input("Address: "),
+        "Phone": input("Phone: "),
+        "Email": input("Email: "),
+        "LinkedIn": input("LinkedIn: "),
+        "Objective": input("Career Objective: "),
+        "Experience": input("Work Experience: "),
+        "Projects": input("Projects: "),
+        "Education": input("Education: "),
+        "Skills": input("Skills: "),
+        "Certifications": input("Certifications: ")
+    }
 
-print("Resume has been generated as resume.pdf")
+
+def save_json(data, filename="resume.json"):
+    with open(filename, "w") as file:
+        json.dump(data, file, indent=4)
+
+    print(f"\nData saved to {filename}")
+
+
+def generate_pdf(data, filename="resume.pdf"):
+    pdf = ResumePDF()
+
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+
+    pdf.header_section(data)
+
+    sections = [
+        "Objective",
+        "Experience",
+        "Projects",
+        "Education",
+        "Skills",
+        "Certifications"
+    ]
+
+    for section in sections:
+        pdf.add_section(section, data.get(section, ""))
+
+    pdf.output(filename)
+
+    print(f"Resume generated successfully: {filename}")
+
+
+def main():
+    resume_data = collect_user_input()
+    save_json(resume_data)
+    generate_pdf(resume_data)
+
+
+if __name__ == "__main__":
+    main()
