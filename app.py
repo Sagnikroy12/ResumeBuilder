@@ -1,61 +1,97 @@
-from flask import Flask, render_template, request, redirect, send_file
-import json
-from fpdf import FPDF
+from flask import Flask, render_template, request, send_file
+from io import BytesIO
+import pdfkit
+import os
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
+config = pdfkit.configuration(
+    wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def format_bullets(text):
+    if not text:
+        return ""
+
+    # Normalize bullet characters
+    bullets = ["\uf0b7", "", "•", "●", "▪", "◦", "-", "–", "—"]
+
+    for b in bullets:
+        text = text.replace(b, "\n")
+
+    items = [i.strip() for i in text.split("\n") if i.strip()]
+
+    return "".join(f"<li>{i}</li>" for i in items)
+
+def generate_html(data):
+
+    template_path = os.path.join(BASE_DIR, "templates", "resume_template.html")
+
+    with open(template_path, "r", encoding="utf-8") as file:
+        html = file.read()
+
+    # Convert bullet sections
+    bullet_sections = [
+        "Experience",
+        "Projects",
+        "Skills",
+        "Certifications"
+    ]
+
+    for section in bullet_sections:
+        data[section] = format_bullets(data.get(section, ""))
+
+    for key, value in data.items():
+        html = html.replace("{{" + key + "}}", value)
+
+    return html
+
+
+def generate_pdf(data):
+
+    html_content = generate_html(data)
+
+    pdf_bytes = pdfkit.from_string(
+        html_content,
+        None,
+        configuration=config
+    )
+
+    return BytesIO(pdf_bytes)
+
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-    if request.method == 'POST':
+
+    if request.method == "POST":
+
         resume_data = {
-            "Name": request.form['name'],
-            "Address": request.form['address'],
-            "Phone": request.form['phone'],
-            "Email": request.form['email'],
-            "LinkedIn": request.form['linkedin'],
-            "Objective": request.form['objective'],
-            "Education": request.form['education'],
-            "Skills": request.form['skills'],
-            "Experience": request.form['experience'],
-            "Projects": request.form['projects'],
-            "Certifications": request.form['certifications'],
+            "Name": request.form["name"],
+            "Address": request.form["address"],
+            "Phone": request.form["phone"],
+            "Email": request.form["email"],
+            "LinkedIn": request.form["linkedin"],
+            "Objective": request.form["objective"],
+            "Education": request.form["education"],
+            "Skills": request.form["skills"],
+            "Experience": request.form["experience"],
+            "Projects": request.form["projects"],
+            "Certifications": request.form["certifications"],
         }
-        with open("resume.json", "w") as json_file:
-            json.dump(resume_data, json_file, indent=4)
-        return redirect('/download_pdf')  # Change this line
-    return render_template('form.html')
 
-@app.route('/success')
-def success():
-    return "Resume data has been saved!"
+        pdf_buffer = generate_pdf(resume_data)
 
-def clean_text(text):
-    if not isinstance(text, str):
-        return str(text)
-    return text.encode('latin-1', 'replace').decode('latin-1')
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name="resume.pdf",
+            mimetype="application/pdf"
+        )
 
-@app.route('/download_pdf')
-def download_pdf():
-    with open("resume.json", "r") as json_file:
-        data = json.load(json_file)
+    return render_template("form.html")
 
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Times", 'B', size=18)
-    pdf.cell(0, 10, txt=f"{data['Name']}", ln=True, align='C')
-    pdf.set_font("Times", 'B', size=12)
-    pdf.cell(0, 10, txt=f"{data['Address']}      {data['Phone']}      {data['Email']}", ln=True, align='C')
-    pdf.cell(0, 10, txt=f"{data['LinkedIn']}", ln=True, align='C')
 
-    for key in ["Objective", "Experience", "Projects", "Education", "Skills", "Certifications"]:
-        value = data.get(key, "")
-        pdf.set_font("Times", 'B', size=12)
-        pdf.cell(0, 10, txt=f"{key}:", ln=True, align='L')
-        pdf.set_font("Arial", size=10)
-        pdf.multi_cell(0, 8, txt=clean_text(str(value)))
-
-    pdf.output("resume.pdf")
-    return send_file("resume.pdf", as_attachment=True)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

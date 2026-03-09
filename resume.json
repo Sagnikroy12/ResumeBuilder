@@ -1,13 +1,13 @@
 {
-    "Name": "Sagnik Roy",
-    "Address": "VILL,POST -  ROSHNA, P.S- PANDUA, DIST.- HOOGHLY",
-    "Phone": "07076404580",
+    "Name": "sagnik roy",
+    "Address": "roshna",
+    "Phone": "7076404580",
     "Email": "sagnikruproy11@gmail.com",
-    "LinkedIn": " https://www.linkedin.com/in/sagnik-roy-b39218192/ ",
-    "Objective": " Dynamic software Engineer specializing in automation testing and quality assurance. Expert in  developing and executing automated test scripts using selenium webdriver and Java. Skilled in API  automaion with frameworks like rest assured and Karate. Proficient in integrating Cucumber BDD for  improved collaboration between technical and non-technical stakeholders. Proven track record of  enchancing software quality and reducing regression testing time by 30% through robust automation  soluions. Strong Problem solving ablities and experience with agile methodologies",
-    "Education": "Bachelor of Mechanical Engineering, Academy of Technology, MAKAUT, 06/2022 ",
-    "Skills": "Programming Languages: Java, Python, C  \uf0b7 Automation Tools: Selenium WebDriver, RestAssured, TestNG, JUnit, Cucumber BDD, Karate Framework.  \uf0b7 Testing: Test Script Development, Creating Test Cases, Manual Testing, Black Box Testing, White Box  Testing, Functional Testing, Regression Testing, Automated Testing, Automated API testing.  \uf0b7 Additional Skills: Documentation and Reporting, Agile and Kanban Methodologies, Problem-Solving,  MySQL, Oracle SQL, Scrum, Git, GitHub, Jira, Microsoft Azure Boards, Test Engineering, Software QA,  Test Planning, Test Design, Test Scripts, QA Analysis, Test Analysis, Test Scenarios, Test Cases. ",
-    "Experience": "Senior Software Engineer A5, Capgemini SE  Hyderabad, 01/2025 \u2013 Present  \uf0b7 Generated comprehensive test cases from software requirements and specifications, ensuring thorough  coverage and identification of edge cases.  \uf0b7 Collaborated with stakeholders to confirm system behaviour and identify defects, executing manual test cases  and documenting results.  \uf0b7 Managed continuous improvement efforts in software quality by thoroughly reporting and tracking defects  using JIRA and Azure boards.  Software Engineer A4, Capgemini SE  Hyderabad, 04/2023 \u2013 01/2025  \uf0b7 Developed and executed automated test scripts using Selenium WebDriver and Java, achieving a 30%  reduction in regression testing time.  \uf0b7 Directed the integration of Cucumber BDD for enhanced collaboration between technical and non-technical  stakeholders.  \uf0b7 Engineered an automation framework for RESTful APIs using RestAssured, Katalon, and Karate, increasing  test coverage and efficiency. ",
-    "Projects": "IRCTC Automation Bot (2025) \uf0b7 Designed a Playwright and TypeScript bot to automate IRCTC workflow from login to booking of Premium Tatkal tickets with Chrome Dev tools and real profile to spoof IRCTC anti bot detection system. \uf0b7 Integrated Tesseract for captcha solving and smart login detection. Excel Reconciliation Engine (2025) \uf0b7 Developed GUI tool that consolidates billing and leave data from Excel sheets and provides extensive report of expected hours and leaves both on Company and Client side. \uf0b7 Highlighted mismatches and pending payments using Python (Pandas/OpenPyXL) Bidding Bot (2025) \uf0b7 Developed a bot to place bid for up to 3 consecutive rows, hit save, solve captcha using custom developed CNN model and placed bid. \uf0b7 Reducing bit placement time from 1min manually to 10 - 15 seconds when automated. Captcha Solver ML Model (2025) \uf0b7 Trained CNN model for recognizing 6\u20139-character alphanumeric CAPTCHAs. \uf0b7 Deployed model as an API for seamless integration in automation flows. BSB Form Automation (2024) \uf0b7 ",
-    "Certifications": "SAFe 6 Practitioner \uf0b7 API Testing Using Rest Assured Test Automation Tool \uf0b7 Webservices API Testing with Rest Assured API & POSTMAN 2023 \uf0b7 RPA - Process Automation using UiPath - Beginner to Expert \uf0b7 Tricentis Tosca Fundamentals \u2013 Automation Web Application Testing (AS1) \uf0b7 Data Structures and Algorithms in Java"
+    "LinkedIn": "",
+    "Objective": "",
+    "Education": "",
+    "Skills": "",
+    "Experience": "",
+    "Projects": "",
+    "Certifications": ""
 }

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 5px 5px 5px 5px;
+        line-height: 1.2;
+        font-size: 16px;
+        letter-spacing: 5px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-top: 0px;
+        margin-bottom: 6px;
+        font-size: 28px;
+        letter-spacing: 1px;
+      }
+
+      .contact {
+        text-align: center;
+        font-size: 15px;
+      }
+
+      .section {
+        margin-top: 12px;
+      }
+
+      .section-title {
+        font-weight: bold;
+        font-size: 22px;
+        /* border-bottom: 1px solid black; */
+        margin-bottom: 6px;
+        letter-spacing: 0.7px;
+      }
+
+      .content {
+        white-space: pre-line;
+        font-size: 16px;
+        letter-spacing: 0.3px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>{{Name}}</h1>
+
+    <div class="contact">
+      {{Address}} <br />
+      {{Phone}} | {{Email}} <br />
+      {{LinkedIn}}
+    </div>
+
+    <hr />
+
+    <div class="section">
+      <div class="section-title">Objective</div>
+      <div class="content">{{Objective}}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Experience</div>
+      <div class="content">{{Experience}}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Projects</div>
+      <div class="content">{{Projects}}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Education</div>
+      <div class="content">{{Education}}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Skills</div>
+      <div class="content">{{Skills}}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Certifications</div>
+      <div class="content">{{Certifications}}</div>
+    </div>
+  </body>
+</html>
