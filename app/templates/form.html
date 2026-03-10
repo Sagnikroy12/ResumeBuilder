@@ -1,0 +1,183 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AI Resume Builder</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="layout">
+      <!-- LEFT PANEL : FORM -->
+
+      <div class="form-panel">
+        <h2>Resume Builder</h2>
+
+        <form method="POST" id="resume-form">
+          <!-- TEMPLATE -->
+
+          <h3>Template</h3>
+
+          <select name="template" id="template">
+            <option value="classic">Classic</option>
+            <option value="modern">Modern</option>
+            <option value="minimal">Minimal</option>
+          </select>
+
+          <!-- CONTACT -->
+
+          <h3>Contact</h3>
+
+          <label>Name</label>
+          <input type="text" name="name" id="name" oninput="updatePreview()" />
+
+          <label>Address</label>
+          <input
+            type="text"
+            name="address"
+            id="address"
+            oninput="updatePreview()"
+          />
+
+          <label>Phone</label>
+          <input
+            type="text"
+            name="phone"
+            id="phone"
+            oninput="updatePreview()"
+          />
+
+          <label>Email</label>
+          <input
+            type="email"
+            name="email"
+            id="email"
+            oninput="updatePreview()"
+          />
+
+          <label>LinkedIn</label>
+          <input
+            type="text"
+            name="linkedin"
+            id="linkedin"
+            oninput="updatePreview()"
+          />
+
+          <!-- DRAGGABLE SECTIONS CONTAINER -->
+
+          <div id="sections-container">
+            <!-- OBJECTIVE -->
+
+            <div class="resume-section" data-section="objective">
+              <h3>Objective</h3>
+
+              <textarea
+                name="objective"
+                id="objective"
+                oninput="updatePreview()"
+              ></textarea>
+            </div>
+
+            <!-- SKILLS -->
+
+            <div class="resume-section" data-section="skills">
+              <h3>Skills</h3>
+
+              <textarea
+                name="skills"
+                id="skills"
+                placeholder="One skill per line"
+                oninput="updatePreview()"
+              ></textarea>
+            </div>
+
+            <!-- EXPERIENCE -->
+
+            <div class="resume-section" data-section="experience">
+              <h3>Experience</h3>
+
+              <div id="experience-container"></div>
+
+              <button type="button" onclick="addExperience()">
+                + Add Experience
+              </button>
+            </div>
+
+            <!-- PROJECTS -->
+
+            <div class="resume-section" data-section="projects">
+              <h3>Projects</h3>
+
+              <textarea
+                name="projects"
+                id="projects"
+                placeholder="One project per line"
+                oninput="updatePreview()"
+              ></textarea>
+            </div>
+
+            <!-- EDUCATION -->
+
+            <div class="resume-section" data-section="education">
+              <h3>Education</h3>
+
+              <textarea
+                name="education"
+                id="education"
+                oninput="updatePreview()"
+              ></textarea>
+            </div>
+
+            <!-- CERTIFICATIONS -->
+
+            <div class="resume-section" data-section="certifications">
+              <h3>Certifications</h3>
+
+              <textarea
+                name="certifications"
+                id="certifications"
+                placeholder="One certification per line"
+                oninput="updatePreview()"
+              ></textarea>
+            </div>
+
+            <!-- CUSTOM SECTIONS -->
+
+            <div class="resume-section" data-section="custom">
+              <h3>Custom Sections</h3>
+
+              <div id="custom-section-container"></div>
+
+              <button type="button" onclick="addCustomSection()">
+                + Add Custom Section
+              </button>
+            </div>
+          </div>
+
+          <br /><br />
+
+          <button type="submit">Generate Resume</button>
+        </form>
+      </div>
+
+      <!-- RIGHT PANEL : LIVE PREVIEW -->
+
+      <div class="preview-panel">
+        <h2>Live Preview</h2>
+
+        <div id="preview-box"></div>
+      </div>
+    </div>
+
+    <!-- LIBRARIES -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/form.js') }}"></script>
+  </body>
+</html>
