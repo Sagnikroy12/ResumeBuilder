@@ -1,0 +1,258 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <style>
+      body {
+        font-family: "Times New Roman", Times, serif;
+        margin: 10px;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 4px;
+      }
+
+      .contact {
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 4px;
+      }
+
+      .contact-row {
+        display: flex;
+        width: 100%;
+      }
+
+      .contact-row span {
+        flex: 1;
+      }
+
+      .contact-row .left {
+        text-align: left;
+        padding-right: 100px;
+      }
+
+      .contact-row .center {
+        text-align: center;
+      }
+
+      .contact-row .right {
+        text-align: right;
+        padding-left: 100px;
+      }
+
+      .linkedin {
+        text-align: center;
+        margin-top: 2px;
+      }
+
+      .section {
+        margin-top: 10px;
+      }
+
+      h3 {
+        margin-bottom: 4px;
+        font-size: 22px;
+        border-bottom: 1px solid #000;
+        padding-bottom: 2px;
+      }
+
+      ul {
+        margin-top: 2px;
+        margin-bottom: 2px;
+        padding-left: 25px;
+      }
+
+      li {
+        margin-bottom: 2px;
+      }
+
+      .job {
+        margin-bottom: 6px;
+      }
+
+      .job-header {
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>{{ data.personal.name }}</h1>
+
+    <hr />
+
+    <div class="contact">
+      <div class="contact-row">
+        <span class="left">{{ data.personal.address }}</span>
+        <span class="center">{{ data.personal.phone }}</span>
+        <span class="right">{{ data.personal.email }}</span>
+      </div>
+
+      <div class="linkedin">
+        <a href="{{ data.personal.linkedin }}">{{ data.personal.linkedin }}</a>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- OBJECTIVE -->
+
+    {% if data.objective %}
+
+    <div class="section">
+      <h3>Objective</h3>
+
+      <p>{{ data.objective }}</p>
+    </div>
+
+    {% endif %}
+
+    <!-- SKILLS -->
+
+    {% if data.skills %}
+
+    <div class="section">
+      <h3>Skills</h3>
+
+      <ul>
+        {% if data.skills is string %} {% set skills = data.skills.split('\n')
+        %} {% else %} {% set skills = data.skills %} {% endif %} {% for skill in
+        skills if skill.strip() %} {% if ':' in skill %}
+
+        <li>
+          <strong>{{ skill.split(':',1)[0] }}:</strong>
+          {{ skill.split(':',1)[1] }}
+        </li>
+
+        {% else %}
+
+        <li>{{ skill }}</li>
+
+        {% endif %} {% endfor %}
+      </ul>
+    </div>
+
+    {% endif %}
+
+    <!-- EXPERIENCE -->
+
+    {% if data.experience %}
+
+    <div class="section">
+      <h3>Experience</h3>
+
+      {% for exp in data.experience %}
+
+      <div class="job">
+        <div class="job-header">
+          <span>{{ exp.title }}</span>
+          <span>{{ exp.duration }}</span>
+        </div>
+
+        <ul>
+          {% if exp.points is string %} {% set points = exp.points.split('\n')
+          %} {% else %} {% set points = exp.points %} {% endif %} {% for p in
+          points if p.strip() %}
+
+          <li>{{ p }}</li>
+
+          {% endfor %}
+        </ul>
+      </div>
+
+      {% endfor %}
+    </div>
+
+    {% endif %}
+
+    <!-- PROJECTS -->
+
+    {% if data.projects %}
+
+    <div class="section">
+      <h3>Projects</h3>
+
+      <ul>
+        {% if data.projects is string %} {% set projects =
+        data.projects.split('\n') %} {% else %} {% set projects = data.projects
+        %} {% endif %} {% for project in projects if project.strip() %} {% if
+        ':' in project %}
+
+        <li>
+          <strong>{{ project.split(':',1)[0] }}:</strong>
+          {{ project.split(':',1)[1] }}
+        </li>
+
+        {% else %}
+
+        <li>{{ project }}</li>
+
+        {% endif %} {% endfor %}
+      </ul>
+    </div>
+
+    {% endif %}
+
+    <!-- EDUCATION -->
+
+    {% if data.education %}
+
+    <div class="section">
+      <h3>Education</h3>
+
+      <p>{{ data.education }}</p>
+    </div>
+
+    {% endif %}
+
+    <!-- CERTIFICATIONS -->
+
+    {% if data.certifications %}
+
+    <div class="section">
+      <h3>Certifications</h3>
+
+      <ul>
+        {% if data.certifications is string %} {% set certs =
+        data.certifications.split('\n') %} {% else %} {% set certs =
+        data.certifications %} {% endif %} {% for cert in certs if cert.strip()
+        %}
+
+        <li>{{ cert }}</li>
+
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% endif %}
+
+    <!-- CUSTOM SECTIONS -->
+
+    {% if data.custom_sections %} {% for section in data.custom_sections %}
+
+    <div class="section">
+      <h3>{{ section.title }}</h3>
+
+      <ul>
+        {% if section.points is string %} {% set points =
+        section.points.split('\n') %} {% else %} {% set points = section.points
+        %} {% endif %} {% for p in points if p.strip() %}
+
+        <li>{{ p }}</li>
+
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% endfor %} {% endif %}
+  </body>
+</html>
