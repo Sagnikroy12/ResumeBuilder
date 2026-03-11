@@ -81,7 +81,7 @@ def index():
 
         template_map = {
             "classic": "resume_template.html",
-            "modern": "resume_template.html",
+            "modern": "resume_template2.html",
             "minimal": "resume_template.html"
         }
 
