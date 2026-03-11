@@ -7,7 +7,7 @@
     <style>
       body {
         font-family: "Times New Roman", Times, serif;
-        margin: 40px;
+        margin: 20px;
         color: #222;
         line-height: 1.25;
         font-size: 16px;
@@ -79,7 +79,8 @@
             {{ personal.address }}<br />
             {{ personal.phone }}<br />
             {{ personal.email }}<br />
-            {{ personal.linkedin }}
+            <a href="{{ personal.linkedin }}">{{ personal.linkedin }}</a>
+            <!-- {{ personal.linkedin }} -->
           </div>
         </td>
       </tr>

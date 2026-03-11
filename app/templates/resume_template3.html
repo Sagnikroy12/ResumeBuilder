@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Resume</title>
+
+    <style>
+      body {
+        font-family: 'Times New Roman', Times, serif;
+        margin: 20px;
+        color: #222;
+        line-height: 1.35;
+        font-size: 15px;
+      }
+
+      /* HEADER */
+
+      .header {
+        margin-bottom: 18px;
+      }
+
+      .name {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .contact {
+        font-size: 13px;
+        color: #444;
+        margin-top: 4px;
+      }
+
+      /* SECTION */
+
+      .section {
+        margin-top: 18px;
+      }
+
+      .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        border-bottom: 1px solid #000;
+        margin-bottom: 6px;
+        padding-bottom: 2px;
+        text-transform: uppercase;
+      }
+
+      /* LISTS */
+
+      ul {
+        margin: 6px 0 10px 20px;
+        padding: 0;
+      }
+
+      li {
+        margin-bottom: 3px;
+      }
+
+      /* EXPERIENCE */
+
+      .job {
+        margin-bottom: 12px;
+      }
+
+      .job-header {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+      }
+
+      .duration {
+        color: #444;
+        font-weight: 600;
+      }
+
+      /* SKILLS CLEANUP */
+
+      ul {
+        column-count: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HEADER -->
+
+    {% if personal.name or personal.address or personal.phone or personal.email or personal.linkedin %}
+    <div class="header">
+      {% if personal.name %}
+      <div class="name">{{ personal.name }}</div>
+      {% endif %}
+
+      {% if personal.address or personal.phone or personal.email or personal.linkedin %}
+      <div class="contact">
+        {{ personal.address }}{% if personal.address and personal.phone %} | {% endif %}{{ personal.phone }}{% if (personal.address or personal.phone) and personal.email %} | {% endif %}{{ personal.email }}{% if (personal.address or personal.phone or personal.email) and personal.linkedin %} | {% endif %}{{ personal.linkedin }}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if objective %}
+    <div class="section">
+      <div class="section-title">Summary</div>
+
+      <p>{{ objective }}</p>
+    </div>
+    {% endif %} {% if skills %}
+    <div class="section">
+      <div class="section-title">Skills</div>
+
+      <ul>
+        {{ skills | safe }}
+      </ul>
+    </div>
+    {% endif %} {% if experience %}
+    <div class="section">
+      <div class="section-title">Experience</div>
+
+      {% for job in experience %}
+
+      <div class="job">
+        <div class="job-header">
+          <span>{{ job.title }}</span>
+          <span class="duration">{{ job.duration }}</span>
+        </div>
+
+        <ul>
+          {% for point in job.points %}
+          <li>{{ point }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      {% endfor %}
+    </div>
+    {% endif %} {% if projects %}
+    <div class="section">
+      <div class="section-title">Projects</div>
+
+      <ul>
+        {{ projects | safe }}
+      </ul>
+    </div>
+    {% endif %} {% if education %}
+    <div class="section">
+      <div class="section-title">Education</div>
+
+      <p>{{ education }}</p>
+    </div>
+    {% endif %} {% if certifications %}
+    <div class="section">
+      <div class="section-title">Certifications</div>
+
+      <ul>
+        {{ certifications | safe }}
+      </ul>
+    </div>
+    {% endif %} {% if custom_sections %} {% for section in custom_sections %}
+
+    <div class="section">
+      <div class="section-title">{{ section.title }}</div>
+
+      <ul>
+        {% for p in section.points %}
+        <li>{{ p }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% endfor %} {% endif %}
+  </body>
+</html>

@@ -17,6 +17,11 @@ TEMPLATES = {
         "file": "resume_template2.html",
         "description": "Modern style with clean layout"
     },
+    "template3": {
+    "name": "Professional",
+    "file": "resume_template3.html",
+    "description": "Clean ATS-optimized professional layout"
+    },
     # To add a new template:
     # "template3": {
     #     "name": "Template Name",

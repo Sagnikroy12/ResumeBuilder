@@ -110,11 +110,7 @@ margin-bottom:4px;
 
 <body>
 
-${
-  data.name
-    ? `<h1>${data.name}</h1>`
-    : ""
-}
+${data.name ? `<h1>${data.name}</h1>` : ""}
 
 ${
   data.name || data.address || data.phone || data.email || data.linkedin
@@ -345,6 +341,41 @@ ${data.custom}
 `;
 
 /* ===============================
+TEMPLATE 3
+=============================== */
+const template3 = (data) => `
+<div style="font-family:Arial;padding:25px">
+
+<h1>${data.name}</h1>
+
+<p>
+${data.address} |
+${data.phone} |
+${data.email} |
+${data.linkedin}
+</p>
+
+<h3>Summary</h3>
+<p>${data.objective}</p>
+
+<h3>Skills</h3>
+<ul>${data.skills}</ul>
+
+<h3>Experience</h3>
+${data.experience}
+
+<h3>Projects</h3>
+<ul>${data.projects}</ul>
+
+<h3>Education</h3>
+<p>${data.education}</p>
+
+<h3>Certifications</h3>
+<ul>${data.certifications}</ul>
+
+</div>
+`;
+/* ===============================
 LIVE PREVIEW
 =============================== */
 
@@ -399,7 +430,6 @@ function updatePreview() {
     .filter((c) => c.trim())
     .map((c) => `<li>${c}</li>`)
     .join("");
-
 
   /* EXPERIENCE */
 
@@ -475,10 +505,12 @@ ${expHTML}
 
   let html = "";
 
-  if (template === "template2") {
+  if (template === "template1") {
+    html = template1(data);
+  } else if (template === "template2") {
     html = template2(data);
   } else {
-    html = template1(data);
+    html = template3(data);
   }
 
   /* RENDER PREVIEW */
