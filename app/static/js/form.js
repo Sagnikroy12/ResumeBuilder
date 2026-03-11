@@ -94,6 +94,8 @@ padding-bottom:2px;
 ul{
 margin:4px 0 8px 25px;
 padding:0;
+list-style-type:disc;
+list-style-position:outside;
 }
 
 .job-header{
@@ -108,16 +110,26 @@ margin-bottom:4px;
 
 <body>
 
-<h1>${data.name}</h1>
+${
+  data.name
+    ? `<h1>${data.name}</h1>`
+    : ""
+}
 
+${
+  data.name || data.address || data.phone || data.email || data.linkedin
+    ? `
 <hr>
 
 <div class="contact">
-${data.address} | ${data.phone} | ${data.email}<br>
-${data.linkedin}
+${data.address || ""} ${data.address && data.phone ? "|" : ""} ${data.phone || ""} ${(data.address || data.phone) && data.email ? "|" : ""} ${data.email || ""}<br>
+${data.linkedin || ""}
 </div>
 
 <hr>
+`
+    : ""
+}
 
 ${
   data.objective
@@ -196,7 +208,7 @@ const template2 = (data) => `
 
 body{
 font-family:"Times New Roman";
-margin:40px;
+margin:10px;
 color:#222;
 line-height:1.25;
 font-size:16px;
@@ -229,6 +241,13 @@ text-transform:uppercase;
 
 ul{
 margin:4px 0 8px 20px;
+list-style-type:disc;
+list-style-position:outside;
+padding-left:20px;
+}
+
+li{
+text-align:left;
 }
 
 .job-header{
@@ -249,22 +268,28 @@ column-gap:25px;
 
 <body>
 
+${
+  data.name || data.address || data.phone || data.email || data.linkedin
+    ? `
 <table class="header-table">
 <tr>
 
 <td>
-<div class="name">${data.name}</div>
+<div class="name">${data.name || ""}</div>
 </td>
 
 <td class="contact-block">
-${data.address}<br>
-${data.phone}<br>
-${data.email}<br>
-${data.linkedin}
+${data.address || ""}<br>
+${data.phone || ""}<br>
+${data.email || ""}<br>
+${data.linkedin || ""}
 </td>
 
 </tr>
 </table>
+`
+    : ""
+}
 
 ${
   data.objective
