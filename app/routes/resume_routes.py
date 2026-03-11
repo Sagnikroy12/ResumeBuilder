@@ -7,6 +7,11 @@ from ..utils.text_utils import parse_bullets
 resume_bp = Blueprint("resume", __name__)
 
 
+def to_li(items):
+    """Convert list of strings into HTML <li> elements"""
+    return "".join([f"<li>{item}</li>" for item in items])
+
+
 @resume_bp.route("/", methods=["GET", "POST"])
 def index():
 
@@ -22,7 +27,7 @@ def index():
 
         for title, duration, point in zip(titles, durations, points):
 
-            if title.strip() == "" and duration.strip() == "" and point.strip() == "":
+            if not title.strip() and not duration.strip() and not point.strip():
                 continue
 
             experience.append({
@@ -38,17 +43,23 @@ def index():
 
         custom_sections = []
 
-        for title, points in zip(section_titles, section_points):
+        for title, pts in zip(section_titles, section_points):
 
-            if title.strip() == "" and points.strip() == "":
+            if not title.strip() and not pts.strip():
                 continue
 
             custom_sections.append({
                 "title": title.strip(),
-                "points": parse_bullets(points)
+                "points": parse_bullets(pts)
             })
 
-        # ---------- RESUME DATA (JSON STRUCTURE) ----------
+        # ---------- PREPARE LIST DATA ----------
+
+        skills_list = parse_bullets(request.form.get("skills", ""))
+        projects_list = parse_bullets(request.form.get("projects", ""))
+        cert_list = parse_bullets(request.form.get("certifications", ""))
+
+        # ---------- RESUME DATA ----------
 
         resume_data = {
 
@@ -62,27 +73,26 @@ def index():
 
             "objective": request.form.get("objective", "").strip(),
 
-            "skills": parse_bullets(request.form.get("skills", "")),
+            "skills": to_li(skills_list),
 
             "experience": experience,
 
-            "projects": parse_bullets(request.form.get("projects", "")),
+            "projects": to_li(projects_list),
 
             "education": request.form.get("education", "").strip(),
 
-            "certifications": parse_bullets(request.form.get("certifications", "")),
+            "certifications": to_li(cert_list),
 
             "custom_sections": custom_sections
         }
 
         # ---------- TEMPLATE SWITCHING ----------
 
-        template_name = request.form.get("template", "classic")
+        template_name = request.form.get("template", "template1")
 
         template_map = {
-            "classic": "resume_template.html",
-            "modern": "resume_template2.html",
-            "minimal": "resume_template.html"
+            "template1": "resume_template.html",
+            "template2": "resume_template2.html"
         }
 
         template_file = template_map.get(template_name, "resume_template.html")

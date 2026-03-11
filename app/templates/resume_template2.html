@@ -1,23 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
     <title>Resume</title>
+
     <style>
       body {
         font-family: "Times New Roman", Times, serif;
-        margin: 30px;
+        margin: 40px;
         color: #222;
         line-height: 1.25;
         font-size: 16px;
-        letter-spacing: 1px; 
+        letter-spacing: 0.5px;
       }
 
-      /* ---------- HEADER TABLE ---------- */
       .header-table {
         width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
       }
 
       .header-table td {
@@ -28,9 +27,7 @@
       .name {
         font-size: 32px;
         font-weight: 800;
-        margin: 0;
         line-height: 1.1;
-        letter-spacing: 0.8px;
       }
 
       .contact-block {
@@ -40,193 +37,76 @@
         line-height: 1.3;
       }
 
-      .contact-block a {
-        color: #222;
-        text-decoration: none;
-      }
-
-      /* ---------- SECTION HEADERS ---------- */
       .section-title {
         font-size: 18px;
         font-weight: 700;
-        margin: 18px 0 6px 0;
+        margin: 20px 0 8px 0;
         border-bottom: 1.5px solid #000;
         padding-bottom: 2px;
         text-transform: uppercase;
-        letter-spacing: 1px;
       }
 
-      .sub-title {
-        font-size: 15px;
-        font-weight: 600;
-        margin: 8px 0 3px 0;
-      }
-
-      .duration {
-        font-size: 13px;
-        color: #555;
-        margin-bottom: 4px;
-      }
-
-      /* ---------- LISTS ---------- */
       ul {
         margin: 4px 0 8px 20px;
         padding: 0;
+        column-count: 1;
       }
 
       li {
         margin-bottom: 2px;
       }
 
-      /* Two-column skills */
-      .skill-list {
-        column-count: 2;
-        column-gap: 25px;
-        margin-top: 4px;
-        list-style-type: disc; /* ensures bullets show */
-        padding-left: 20px; /* indentation for bullets */
-      }
-
-      p {
-        margin: 4px 0;
-      }
-
       .job-header {
         display: flex;
         justify-content: space-between;
         font-weight: bold;
-        margin-bottom: 4px; /* small gap below header */
+        margin-bottom: 4px;
       }
     </style>
   </head>
+
   <body>
-    <!-- ================= HEADER ================= -->
     <table class="header-table">
       <tr>
         <td>
-          <div class="name">{{ data.personal.name }}</div>
+          <div class="name">{{ personal.name }}</div>
         </td>
+
         <td>
           <div class="contact-block">
-            {{ data.personal.address }}<br />
-            <a href="tel:{{ data.personal.phone }}">{{ data.personal.phone }}</a
-            ><br />
-            <a href="mailto:{{ data.personal.email }}"
-              >{{ data.personal.email }}</a
-            ><br />
-            <a href="{{ data.personal.linkedin }}"
-              >{{ data.personal.linkedin }}</a
-            >
+            {{ personal.address }}<br />
+            {{ personal.phone }}<br />
+            {{ personal.email }}<br />
+            {{ personal.linkedin }}
           </div>
         </td>
       </tr>
     </table>
 
-    <!-- ================= OBJECTIVE ================= -->
-    {% if data.objective %}
     <div class="section-title">Objective</div>
-    <p>{{ data.objective }}</p>
-    {% endif %}
+    <p>{{ objective }}</p>
 
-    <!-- ================= SKILLS ================= -->
-    {% if data.skills %}
     <div class="section-title">Skills</div>
-    <ul class="skill-list">
-      {% if data.skills is string %} {% set skills = data.skills.split('\n') %}
-      {% else %} {% set skills = data.skills %} {% endif %} {% for skill in
-      skills if skill.strip() %} {% if ':' in skill %}
-      <li>
-        <strong>{{ skill.split(':',1)[0] }}:</strong> {{ skill.split(':',1)[1]
-        }}
-      </li>
-      {% else %}
-      <li>{{ skill }}</li>
-      {% endif %} {% endfor %}
-    </ul>
-    {% endif %}
-
-    <!-- ================= EXPERIENCE ================= -->
-    <!-- {% if data.experience %}
-    <div class="section-title">Experience</div>
-    {% for exp in data.experience %}
-    <div class="sub-title">{{ exp.title }}</div>
-    <div class="duration">{{ exp.duration }}</div>
     <ul>
-      {% if exp.points is string %} {% set points = exp.points.split('\n') %} {%
-      else %} {% set points = exp.points %} {% endif %} {% for p in points if
-      p.strip() %}
-      <li>{{ p }}</li>
-      {% endfor %}
+      {{ skills | safe  }}
     </ul>
-    {% endfor %} {% endif %} -->
-    {% if data.experience %}
+
     <div class="section-title">Experience</div>
-    {% for exp in data.experience %}
-    <div class="job">
-      <div
-        class="job-header"
-        style="display: flex; justify-content: space-between; font-weight: bold"
-      >
-        <span>{{ exp.title }}</span>
-        <span>{{ exp.duration }}</span>
-      </div>
+    {{ experience }}
 
-      <ul>
-        {% if exp.points is string %} {% set points = exp.points.split('\n') %}
-        {% else %} {% set points = exp.points %} {% endif %} {% for p in points
-        if p.strip() %}
-        <li>{{ p }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endfor %} {% endif %}
-
-    <!-- ================= PROJECTS ================= -->
-    {% if data.projects %}
     <div class="section-title">Projects</div>
     <ul>
-      {% if data.projects is string %} {% set projects =
-      data.projects.split('\n') %} {% else %} {% set projects = data.projects %}
-      {% endif %} {% for project in projects if project.strip() %} {% if ':' in
-      project %}
-      <li>
-        <strong>{{ project.split(':',1)[0] }}:</strong> {{
-        project.split(':',1)[1] }}
-      </li>
-      {% else %}
-      <li>{{ project }}</li>
-      {% endif %} {% endfor %}
+      {{ projects | safe  }}
     </ul>
-    {% endif %}
 
-    <!-- ================= EDUCATION ================= -->
-    {% if data.education %}
     <div class="section-title">Education</div>
-    <p>{{ data.education }}</p>
-    {% endif %}
+    <p>{{ education }}</p>
 
-    <!-- ================= CERTIFICATIONS ================= -->
-    {% if data.certifications %}
     <div class="section-title">Certifications</div>
     <ul>
-      {% if data.certifications is string %} {% set certs =
-      data.certifications.split('\n') %} {% else %} {% set certs =
-      data.certifications %} {% endif %} {% for cert in certs if cert.strip() %}
-      <li>{{ cert }}</li>
-      {% endfor %}
+      {{ certifications | safe  }}
     </ul>
-    {% endif %}
 
-    <!-- ================= CUSTOM SECTIONS ================= -->
-    {% if data.custom_sections %} {% for section in data.custom_sections %}
-    <div class="section-title">{{ section.title }}</div>
-    <ul>
-      {% if section.points is string %} {% set points =
-      section.points.split('\n') %} {% else %} {% set points = section.points %}
-      {% endif %} {% for p in points if p.strip() %}
-      <li>{{ p }}</li>
-      {% endfor %}
-    </ul>
-    {% endfor %} {% endif %}
+    {{ custom_sections }}
   </body>
 </html>

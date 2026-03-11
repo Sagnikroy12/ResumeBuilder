@@ -16,7 +16,8 @@ options = {
 
 def generate_pdf(data, template_file):
 
-    html = render_template(template_file, data=data)
+    # unpack dictionary so template receives variables directly
+    html = render_template(template_file, **data)
 
     pdf = pdfkit.from_string(
         html,

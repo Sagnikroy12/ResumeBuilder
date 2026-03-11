@@ -23,10 +23,9 @@
 
           <h3>Template</h3>
 
-          <select name="template" id="template">
-            <option value="classic">Classic</option>
-            <option value="modern">Modern</option>
-            <option value="minimal">Minimal</option>
+          <select name="template" id="template" onchange="updatePreview()">
+            <option value="template1">Classic</option>
+            <option value="template2">Modern</option>
           </select>
 
           <!-- CONTACT -->
@@ -68,7 +67,7 @@
             oninput="updatePreview()"
           />
 
-          <!-- DRAGGABLE SECTIONS CONTAINER -->
+          <!-- SECTIONS CONTAINER -->
 
           <div id="sections-container">
             <!-- OBJECTIVE -->
@@ -170,7 +169,11 @@
       <div class="preview-panel">
         <h2>Live Preview</h2>
 
-        <div id="preview-box"></div>
+        <iframe
+          id="preview-box"
+          style="width: 100%; height: 900px; border: none"
+        >
+        </iframe>
       </div>
     </div>
 
