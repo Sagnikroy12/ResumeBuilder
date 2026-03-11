@@ -49,7 +49,6 @@
       ul {
         margin: 4px 0 8px 20px;
         padding: 0;
-        column-count: 1;
       }
 
       li {
@@ -83,30 +82,61 @@
       </tr>
     </table>
 
+    {% if objective %}
     <div class="section-title">Objective</div>
     <p>{{ objective }}</p>
+    {% endif %}
 
+    {% if skills %}
     <div class="section-title">Skills</div>
     <ul>
       {{ skills | safe  }}
     </ul>
+    {% endif %}
 
+    {% if experience %}
     <div class="section-title">Experience</div>
-    {{ experience }}
+    {% for exp in experience %}
+    <div class="job-header">
+      <span>{{ exp.title }}</span>
+      <span>{{ exp.duration }}</span>
+    </div>
+    <ul>
+      {% for p in exp.points %}
+      <li>{{ p }}</li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+    {% endif %}
 
+    {% if projects %}
     <div class="section-title">Projects</div>
     <ul>
       {{ projects | safe  }}
     </ul>
+    {% endif %}
 
+    {% if education %}
     <div class="section-title">Education</div>
     <p>{{ education }}</p>
+    {% endif %}
 
+    {% if certifications %}
     <div class="section-title">Certifications</div>
     <ul>
       {{ certifications | safe  }}
     </ul>
+    {% endif %}
 
-    {{ custom_sections }}
+    {% if custom_sections %}
+    {% for section in custom_sections %}
+    <div class="section-title">{{ section.title }}</div>
+    <ul>
+      {% for p in section.points %}
+      <li>{{ p }}</li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+    {% endif %}
   </body>
 </html>

@@ -3,13 +3,23 @@ from io import BytesIO
 
 from ..services.pdf_service import generate_pdf
 from ..utils.text_utils import parse_bullets
+from ..config.templates_config import get_template_file
 
 resume_bp = Blueprint("resume", __name__)
 
 
 def to_li(items):
-    """Convert list of strings into HTML <li> elements"""
-    return "".join([f"<li>{item}</li>" for item in items])
+    """Convert list of strings into HTML <li> elements with bold formatting before colons"""
+    result = []
+    for item in items:
+        if ':' in item:
+            # Split on first colon and make the part before it bold
+            parts = item.split(':', 1)
+            formatted_item = f"<li><strong>{parts[0].strip()}:</strong> {parts[1].strip()}</li>"
+        else:
+            formatted_item = f"<li>{item}</li>"
+        result.append(formatted_item)
+    return "".join(result)
 
 
 @resume_bp.route("/", methods=["GET", "POST"])
@@ -58,6 +68,8 @@ def index():
         skills_list = parse_bullets(request.form.get("skills", ""))
         projects_list = parse_bullets(request.form.get("projects", ""))
         cert_list = parse_bullets(request.form.get("certifications", ""))
+        objective = request.form.get("objective", "").strip()
+        education = request.form.get("education", "").strip()
 
         # ---------- RESUME DATA ----------
 
@@ -71,31 +83,25 @@ def index():
                 "linkedin": request.form.get("linkedin", "").strip()
             },
 
-            "objective": request.form.get("objective", "").strip(),
+            "objective": objective if objective else None,
 
-            "skills": to_li(skills_list),
+            "skills": to_li(skills_list) if skills_list else None,
 
-            "experience": experience,
+            "experience": experience if experience else None,
 
-            "projects": to_li(projects_list),
+            "projects": to_li(projects_list) if projects_list else None,
 
-            "education": request.form.get("education", "").strip(),
+            "education": education if education else None,
 
-            "certifications": to_li(cert_list),
+            "certifications": to_li(cert_list) if cert_list else None,
 
-            "custom_sections": custom_sections
+            "custom_sections": custom_sections if custom_sections else None
         }
 
         # ---------- TEMPLATE SWITCHING ----------
 
         template_name = request.form.get("template", "template1")
-
-        template_map = {
-            "template1": "resume_template.html",
-            "template2": "resume_template2.html"
-        }
-
-        template_file = template_map.get(template_name, "resume_template.html")
+        template_file = get_template_file(template_name)
 
         # ---------- GENERATE PDF ----------
 

@@ -239,7 +239,7 @@ margin-bottom:4px;
 }
 
 .skill-list{
-column-count:2;
+column-count:1;
 column-gap:25px;
 }
 
