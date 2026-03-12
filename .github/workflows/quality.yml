@@ -1,0 +1,55 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Full history for better analysis
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pylint radon
+    
+    - name: Run pylint
+      run: pylint app --disable=C0111,C0114,C0115,C0116 --exit-zero
+      continue-on-error: true
+    
+    - name: Run radon complexity
+      run: radon cc app -a -j > complexity.json
+      continue-on-error: true
+    
+    - name: Run radon metrics
+      run: radon mi app -j > metrics.json
+      continue-on-error: true
+    
+    - name: Upload quality reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-reports
+        path: |
+          complexity.json
+          metrics.json
+      if: always()
+    
+    # SonarCloud analysis (optional - requires SonarCloud setup)
+    # - name: SonarCloud Scan
+    #   uses: SonarSource/sonarcloud-github-action@master
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

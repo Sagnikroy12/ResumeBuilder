@@ -1,0 +1,58 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: production
+      url: https://your-app-url.com
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test
+        run: echo "Testing complete - Ready for deployment"
+      
+      # Example deployment to Docker Container
+      - name: Deploy to production server
+        run: |
+          echo "Deploying to production..."
+          # Add your deployment commands here
+          # Examples:
+          # - Deploy to AWS ECS
+          # - Deploy to Google Cloud Run
+          # - Deploy to DigitalOcean App Platform
+          # - Deploy to Heroku
+          # - SSH to your server and pull latest image
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        if: github.ref == 'refs/heads/main'
+      
+      # Notification example
+      - name: Notify deployment
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H 'Content-type: application/json' \
+            -d '{"text":"✅ Deployment to production successful!"}'
+        if: success()
+        continue-on-error: true
+
+  # Health check after deployment
+  health-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check application health
+        run: |
+          curl -f https://your-app-url.com || exit 1
+        retries: 3
+        retry_wait_seconds: 10
+        continue-on-error: true

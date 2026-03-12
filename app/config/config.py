@@ -1,0 +1,73 @@
+"""
+Configuration Management for Resume Builder Application
+Supports development, testing, and production environments
+"""
+
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+class Config:
+    """Base configuration"""
+    SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-secret-key-change-in-production"
+    FLASK_ENV = os.environ.get("FLASK_ENV", "development")
+    DEBUG = False
+    TESTING = False
+    
+    # File upload configuration
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', '..', 'uploads')
+    MAX_CONTENT_LENGTH = int(os.environ.get("MAX_UPLOAD_SIZE", 50000000))  # 50MB
+    ALLOWED_EXTENSIONS = {'pdf', 'txt', 'doc', 'docx'}
+    
+    # Logging
+    LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+    
+    # API Configuration
+    JSON_SORT_KEYS = False
+    JSONIFY_PRETTYPRINT_REGULAR = False
+
+class DevelopmentConfig(Config):
+    """Development configuration"""
+    DEBUG = True
+    TESTING = False
+    FLASK_ENV = "development"
+
+class TestingConfig(Config):
+    """Testing configuration"""
+    DEBUG = True
+    TESTING = True
+    FLASK_ENV = "testing"
+    WTF_CSRF_ENABLED = False
+
+class ProductionConfig(Config):
+    """Production configuration"""
+    DEBUG = False
+    TESTING = False
+    FLASK_ENV = "production"
+    
+    # Enforce secure settings in production
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
+
+class StagingConfig(ProductionConfig):
+    """Staging configuration - similar to production with some debugging"""
+    DEBUG = False
+
+# Configuration dictionary
+config = {
+    "development": DevelopmentConfig,
+    "testing": TestingConfig,
+    "production": ProductionConfig,
+    "staging": StagingConfig,
+    "default": DevelopmentConfig
+}
+
+def get_config(config_name=None):
+    """Get configuration object based on environment"""
+    if config_name is None:
+        config_name = os.environ.get("FLASK_ENV", "development")
+    return config.get(config_name, config["default"])
