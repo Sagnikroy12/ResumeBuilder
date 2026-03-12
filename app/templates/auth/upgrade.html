@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade to Pro - Premium Resume Builder{% endblock %}
+
+{% block content %}
+<div class="upgrade-container">
+    <div class="upgrade-header">
+        <h1>Unlock Your Career Potential</h1>
+        <p>Upgrade to Premium Pro to download unlimited high-quality resumes tailored for ATS systems.</p>
+    </div>
+
+    <div class="pricing-cards">
+        <!-- Free Tier -->
+        <div class="pricing-card">
+            <h3>Basic</h3>
+            <div class="price">$0<span>/forever</span></div>
+            <ul class="features">
+                <li>✅ Create unlimited resumes</li>
+                <li>✅ Access 3 free templates</li>
+                <li>✅ Auto-save to dashboard</li>
+                <li class="disabled">❌ Download as PDF/Word</li>
+                <li class="disabled">❌ ATS Optimization Tools</li>
+            </ul>
+            <button class="btn btn-outline" disabled>Current Plan</button>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="pricing-card premium">
+            <div class="popular-badge">Most Popular</div>
+            <h3>Premium Pro</h3>
+            <div class="price">$9<span>.99/month</span></div>
+            <ul class="features">
+                <li>✅ Create unlimited resumes</li>
+                <li>✅ Access all 20+ premium templates</li>
+                <li>✅ Dashboard & Cloud Sync</li>
+                <li>✅ <strong>Unlimited PDF Downloads</strong></li>
+                <li>✅ AI-Driven ATS Analysis</li>
+            </ul>
+            <a href="#" class="btn btn-primary" onclick="alert('This is a mock payment integration for demonstration purposes.');">Upgrade Now</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.upgrade-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+}
+.upgrade-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+.upgrade-header h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+.upgrade-header p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    max-width: 600px;
+    margin: 0 auto;
+}
+.pricing-cards {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+.pricing-card {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem;
+    width: 350px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    position: relative;
+    border: 2px solid transparent;
+}
+.pricing-card.premium {
+    border-color: #3498db;
+    transform: scale(1.05);
+}
+.popular-badge {
+    position: absolute;
+    top: -15px;
+    right: 30px;
+    background: #f39c12;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+}
+.pricing-card h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+.price {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+}
+.price span {
+    font-size: 1rem;
+    font-weight: normal;
+    color: #7f8c8d;
+}
+.features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}
+.features li {
+    padding: 0.8rem 0;
+    color: #34495e;
+    border-bottom: 1px solid #ecf0f1;
+}
+.features li.disabled {
+    color: #95a5a6;
+    text-decoration: line-through;
+}
+.btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+.btn-outline {
+    background-color: transparent;
+    border: 2px solid #bdc3c7;
+    color: #7f8c8d;
+    cursor: default;
+}
+</style>
+{% endblock %}

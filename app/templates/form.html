@@ -1,23 +1,22 @@
-<!doctype html>
+{% extends "base.html" %}
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Resume Builder - Create Your Perfect Resume</title>
-
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
-
-  <body>
+{% block content %}
     <!-- PAGE HEADER -->
-    <div class="page-header">
-      <h1>✨ Resume Builder</h1>
-      <p>Create a professional resume in minutes with beautiful templates</p>
+    <div class="page-header" style="text-align: center; padding: 2rem 0;">
+      <h1>✨ Create Your Resume</h1>
+      <p>Fill out the form below and it will instantly save to your dashboard.</p>
     </div>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" style="padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; background-color: #eefaf0; color: #2ecc71; border: 1px solid #d5f5e3;">{{ message }}</div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
     <div class="layout">
       <!-- LEFT PANEL : FORM -->
@@ -181,7 +180,7 @@ Google Cloud Professional Data Engineer"
             </div>
           </div>
 
-          <button type="submit">📥 Generate & Download Resume</button>
+          <button type="submit">📥 Generate & Save to Dashboard</button>
         </form>
       </div>
 
@@ -205,5 +204,4 @@ Google Cloud Professional Data Engineer"
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <script src="{{ url_for('static', filename='js/form.js') }}"></script>
-  </body>
-</html>
+{% endblock %}

@@ -21,6 +21,12 @@ class Config:
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_UPLOAD_SIZE", 50000000))  # 50MB
     ALLOWED_EXTENSIONS = {'pdf', 'txt', 'doc', 'docx'}
     
+    # Database Configuration
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, '..', '..', 'app.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
     # Logging
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
     

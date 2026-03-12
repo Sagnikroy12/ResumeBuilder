@@ -1,9 +1,13 @@
-from flask import Blueprint, render_template, request, send_file
+from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash
+from flask_login import login_required, current_user
+import json
 from io import BytesIO
 
 from ..services.pdf_service import generate_pdf
 from ..utils.text_utils import parse_bullets
 from ..config.templates_config import get_template_file
+from app.models.resume import Resume
+from app.extensions import db
 
 resume_bp = Blueprint("resume", __name__)
 
@@ -23,6 +27,7 @@ def to_li(items):
 
 
 @resume_bp.route("/", methods=["GET", "POST"])
+@login_required
 def index():
 
     if request.method == "POST":
@@ -103,15 +108,18 @@ def index():
         template_name = request.form.get("template", "template1")
         template_file = get_template_file(template_name)
 
-        # ---------- GENERATE PDF ----------
-
-        pdf = generate_pdf(resume_data, template_file)
-
-        return send_file(
-            BytesIO(pdf),
-            download_name="resume.pdf",
-            as_attachment=True,
-            mimetype="application/pdf"
+        # ---------- SAVE TO DB INSTEAD OF DOWNLOAD ----------
+        
+        # Save resume data as JSON string
+        new_resume = Resume(
+            user_id=current_user.id,
+            title=f"{resume_data['personal']['name']}'s Resume",
+            data=json.dumps(resume_data)
         )
+        db.session.add(new_resume)
+        db.session.commit()
+        
+        flash("Resume successfully generated and saved to your dashboard!", "success")
+        return redirect(url_for('dashboard.index'))
 
     return render_template("form.html")

@@ -1,7 +1,9 @@
 import os
 from flask import Flask
+from .models import User, Resume
 from .routes.resume_routes import resume_bp
 from .config.config import get_config
+from .extensions import db, login_manager, bcrypt, migrate
 
 def create_app(config_name=None):
     """Application factory"""
@@ -14,11 +16,21 @@ def create_app(config_name=None):
     config = get_config(config_name)
     app.config.from_object(config)
     
+    # Initialize Extensions
+    db.init_app(app)
+    login_manager.init_app(app)
+    bcrypt.init_app(app)
+    migrate.init_app(app, db)
+    
     # Ensure upload folder exists
     os.makedirs(app.config.get("UPLOAD_FOLDER", "uploads"), exist_ok=True)
     
     # Register blueprints
+    from .routes.auth_routes import auth_bp
+    from .routes.dashboard_routes import dashboard_bp
     app.register_blueprint(resume_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(dashboard_bp)
     
     # Error handlers
     @app.errorhandler(404)
