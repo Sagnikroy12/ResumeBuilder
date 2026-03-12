@@ -16,7 +16,7 @@ jobs:
       url: https://your-app-url.com
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Test
         run: echo "Testing complete - Ready for deployment"
       
