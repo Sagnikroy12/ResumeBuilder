@@ -45,6 +45,17 @@ function addCustomSection() {
 PAGE LOAD
 =============================== */
 
+// Function to add cloud character animation to text
+function addCloudAnimation(text) {
+  if (!text) return '';
+  return text
+    .split('')
+    .map((char, index) => {
+      return `<span class="cloud-char" style="animation-delay: ${index * 0.05}s">${char}</span>`;
+    })
+    .join('');
+}
+
 window.onload = function () {
   addExperience();
   updatePreview();
@@ -67,17 +78,21 @@ font-family:"Times New Roman";
 margin:10px;
 line-height:1.4;
 font-size:16px;
+background-color: white;
+color: #000;
 }
 
 h1{
 text-align:center;
 margin-bottom:4px;
+color: #000;
 }
 
 .contact{
 text-align:center;
 font-weight:bold;
 margin-top:4px;
+color: #000;
 }
 
 .section{
@@ -87,6 +102,7 @@ margin-top:10px;
 h3{
 margin-bottom:4px;
 font-size:22px;
+color: #000;
 border-bottom:1px solid #000;
 padding-bottom:2px;
 }
@@ -96,6 +112,34 @@ margin:4px 0 8px 25px;
 padding:0;
 list-style-type:disc;
 list-style-position:outside;
+}
+
+li{
+color: #000;
+}
+
+p{
+color: #000;
+}
+
+/* Cloud character animation */
+.cloud-char {
+  display: inline-block;
+  animation: cloudCharacter 0.15s ease-out forwards;
+}
+
+@keyframes cloudCharacter {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.5);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .job-header{
@@ -205,9 +249,10 @@ const template2 = (data) => `
 body{
 font-family:"Times New Roman";
 margin:10px;
-color:#222;
+color:#000;
 line-height:1.25;
 font-size:16px;
+background-color: white;
 }
 
 .header-table{
@@ -218,12 +263,14 @@ margin-bottom:20px;
 .name{
 font-size:32px;
 font-weight:800;
+color: #000;
 }
 
 .contact-block{
 text-align:right;
 font-weight:600;
 font-size:14px;
+color: #000;
 }
 
 .section-title{
@@ -233,6 +280,7 @@ margin:20px 0 8px 0;
 border-bottom:1.5px solid #000;
 padding-bottom:2px;
 text-transform:uppercase;
+color: #000;
 }
 
 ul{
@@ -240,6 +288,34 @@ margin:4px 0 8px 20px;
 list-style-type:disc;
 list-style-position:outside;
 padding-left:20px;
+}
+
+li{
+color: #000;
+}
+
+p{
+color: #000;
+}
+
+/* Cloud character animation */
+.cloud-char {
+  display: inline-block;
+  animation: cloudCharacter 0.15s ease-out forwards;
+}
+
+@keyframes cloudCharacter {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.5);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 li{
@@ -344,15 +420,83 @@ ${data.custom}
 TEMPLATE 3
 =============================== */
 const template3 = (data) => `
-<div style="font-family:Arial;padding:25px">
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-color: white;
+  color: #000;
+  margin: 0;
+  padding: 25px;
+}
+
+h1 {
+  color: #000;
+  text-align: center;
+  margin: 0 0 15px 0;
+}
+
+h3 {
+  color: #000;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+p {
+  color: #000;
+  margin: 0 0 10px 0;
+}
+
+ul {
+  color: #000;
+  margin: 5px 0 10px 20px;
+  padding: 0;
+}
+
+li {
+  color: #000;
+  margin-bottom: 5px;
+}
+
+/* Cloud character animation */
+.cloud-char {
+  display: inline-block;
+  animation: cloudCharacter 0.15s ease-out forwards;
+}
+
+@keyframes cloudCharacter {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.5);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+</style>
+</head>
+<body>
 
 <h1>${data.name}</h1>
 
 <p>
-${data.address} |
-${data.phone} |
-${data.email} |
-${data.linkedin}
+${(() => {
+  const contactParts = [];
+  if (data.address?.trim()) contactParts.push(data.address);
+  if (data.phone?.trim()) contactParts.push(data.phone);
+  if (data.email?.trim()) contactParts.push(data.email);
+  if (data.linkedin?.trim()) contactParts.push(data.linkedin);
+  return contactParts.join(' | ');
+})()}
 </p>
 
 ${
@@ -376,7 +520,6 @@ ${
 ${
   data.experience
     ? `
-<h3>Experience</h3>
 ${data.experience}
 `
     : ""
@@ -409,7 +552,8 @@ ${
     : ""
 }
 
-</div>
+</body>
+</html>
 `;
 /* ===============================
 LIVE PREVIEW
@@ -476,43 +620,59 @@ function updatePreview() {
   let expHTML = "";
 
   titles.forEach((t, i) => {
-    // Check if there's any content in this experience entry
-    const hasTitle = t.value.trim();
-    const hasDuration = durations[i].value.trim();
-    const hasPoints = points[i].value.trim();
+    // Get trimmed values
+    const titleTrimmed = t.value.trim();
+    const durationTrimmed = durations[i].value.trim();
+    const pointsTrimmed = points[i].value.trim();
 
-    // Skip only if completely empty
-    if (!hasTitle && !hasDuration && !hasPoints) return;
+    // Skip completely empty entries
+    if (!titleTrimmed && !durationTrimmed && !pointsTrimmed) return;
 
-    const pts = points[i].value
+    // Build points list
+    const pts = pointsTrimmed
       .split(/\r?\n/)
       .filter((p) => p.trim())
       .map((p) => `<li>${p}</li>`)
       .join("");
 
-    expHTML += `
+    // Only render job-header if title OR duration has actual content
+    if (titleTrimmed || durationTrimmed) {
+      expHTML += `
 <div class="job-header">
-<span>${t.value}</span>
-<span>${durations[i].value}</span>
-</div>
+<span>${titleTrimmed}</span>
+<span>${durationTrimmed}</span>
+</div>`;
+    }
+    
+    // Only render bullet points if they exist
+    if (pts) {
+      expHTML += `
 <ul>${pts}</ul>
 `;
+    }
   });
 
   /* ADD EXPERIENCE HEADING ONLY IF EXPERIENCE EXISTS */
 
   if (expHTML.trim()) {
-    if (template === "modern") {
+    if (template === "template2") {
       expHTML = `
 <div class="section-title">Experience</div>
 ${expHTML}
 `;
-    } else {
+    } else if (template === "template1") {
       expHTML = `
 <div class="section">
 <h3>Experience</h3>
 ${expHTML}
 </div>
+`;
+    } else if (template === "template3") {
+      // For professional template, just pass the experience content
+      // The template will add the heading
+      expHTML = `
+<h3>Experience</h3>
+${expHTML}
 `;
     }
   }

@@ -3,7 +3,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>AI Resume Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Resume Builder - Create Your Perfect Resume</title>
 
     <link
       rel="stylesheet"
@@ -12,35 +13,42 @@
   </head>
 
   <body>
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <h1>✨ Resume Builder</h1>
+      <p>Create a professional resume in minutes with beautiful templates</p>
+    </div>
+
     <div class="layout">
       <!-- LEFT PANEL : FORM -->
 
       <div class="form-panel">
-        <h2>Resume Builder</h2>
+        <h2>Build Your Resume</h2>
 
         <form method="POST" id="resume-form">
           <!-- TEMPLATE -->
 
-          <h3>Template</h3>
+          <h3>📋 Template</h3>
 
           <select name="template" id="template" onchange="updatePreview()">
             <option value="template1">Classic</option>
             <option value="template2">Modern</option>
-            <option value="template3">Professional</option>
+            <option value="template3" selected>Professional</option>
           </select>
 
           <!-- CONTACT -->
 
-          <h3>Contact</h3>
+          <h3>👤 Contact Information</h3>
 
           <label>Name</label>
-          <input type="text" name="name" id="name" oninput="updatePreview()" />
+          <input type="text" name="name" id="name" placeholder="Full Name" oninput="updatePreview()" />
 
           <label>Address</label>
           <input
             type="text"
             name="address"
             id="address"
+            placeholder="City, Country"
             oninput="updatePreview()"
           />
 
@@ -49,6 +57,7 @@
             type="text"
             name="phone"
             id="phone"
+            placeholder="+1 (555) 123-4567"
             oninput="updatePreview()"
           />
 
@@ -57,6 +66,7 @@
             type="email"
             name="email"
             id="email"
+            placeholder="your.email@example.com"
             oninput="updatePreview()"
           />
 
@@ -65,6 +75,7 @@
             type="text"
             name="linkedin"
             id="linkedin"
+            placeholder="https://linkedin.com/in/yourprofile"
             oninput="updatePreview()"
           />
 
@@ -79,6 +90,7 @@
               <textarea
                 name="objective"
                 id="objective"
+                placeholder="e.g., Seeking a challenging role in software development..."
                 oninput="updatePreview()"
               ></textarea>
             </div>
@@ -91,7 +103,10 @@
               <textarea
                 name="skills"
                 id="skills"
-                placeholder="One skill per line"
+                placeholder="One skill per line
+Example:
+Languages: Python, JavaScript, Java
+Frameworks: Flask, React, Django"
                 oninput="updatePreview()"
               ></textarea>
             </div>
@@ -116,7 +131,10 @@
               <textarea
                 name="projects"
                 id="projects"
-                placeholder="One project per line"
+                placeholder="One project per line
+Example:
+Web App - Built a real-time collaboration tool with React
+Mobile App - Developed iOS app for fitness tracking"
                 oninput="updatePreview()"
               ></textarea>
             </div>
@@ -129,6 +147,7 @@
               <textarea
                 name="education"
                 id="education"
+                placeholder="e.g., Bachelor's Degree in Computer Science - University Name, Graduation: 2020"
                 oninput="updatePreview()"
               ></textarea>
             </div>
@@ -141,7 +160,10 @@
               <textarea
                 name="certifications"
                 id="certifications"
-                placeholder="One certification per line"
+                placeholder="One certification per line
+Example:
+AWS Certified Solutions Architect
+Google Cloud Professional Data Engineer"
                 oninput="updatePreview()"
               ></textarea>
             </div>
@@ -159,22 +181,22 @@
             </div>
           </div>
 
-          <br /><br />
-
-          <button type="submit">Generate Resume</button>
+          <button type="submit">📥 Generate & Download Resume</button>
         </form>
       </div>
 
       <!-- RIGHT PANEL : LIVE PREVIEW -->
 
       <div class="preview-panel">
-        <h2>Live Preview</h2>
+        <div class="preview-header">Live Preview from the Cloud</div>
 
-        <iframe
-          id="preview-box"
-          style="width: 100%; height: 900px; border: none"
-        >
-        </iframe>
+        <div class="preview-cloud">
+          <iframe
+            id="preview-box"
+            style="width: 100%; height: 100%; border: none; background: white;"
+          >
+          </iframe>
+        </div>
       </div>
     </div>
 
