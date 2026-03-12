@@ -355,23 +355,59 @@ ${data.email} |
 ${data.linkedin}
 </p>
 
+${
+  data.objective
+    ? `
 <h3>Summary</h3>
 <p>${data.objective}</p>
+`
+    : ""
+}
 
+${
+  data.skills
+    ? `
 <h3>Skills</h3>
 <ul>${data.skills}</ul>
+`
+    : ""
+}
 
+${
+  data.experience
+    ? `
 <h3>Experience</h3>
 ${data.experience}
+`
+    : ""
+}
 
+${
+  data.projects
+    ? `
 <h3>Projects</h3>
 <ul>${data.projects}</ul>
+`
+    : ""
+}
 
+${
+  data.education
+    ? `
 <h3>Education</h3>
 <p>${data.education}</p>
+`
+    : ""
+}
 
+${
+  data.certifications
+    ? `
 <h3>Certifications</h3>
 <ul>${data.certifications}</ul>
+`
+    : ""
+}
 
 </div>
 `;
@@ -440,7 +476,13 @@ function updatePreview() {
   let expHTML = "";
 
   titles.forEach((t, i) => {
-    if (!t.value.trim()) return;
+    // Check if there's any content in this experience entry
+    const hasTitle = t.value.trim();
+    const hasDuration = durations[i].value.trim();
+    const hasPoints = points[i].value.trim();
+
+    // Skip only if completely empty
+    if (!hasTitle && !hasDuration && !hasPoints) return;
 
     const pts = points[i].value
       .split(/\r?\n/)
