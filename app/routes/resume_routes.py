@@ -8,6 +8,8 @@ from ..utils.text_utils import parse_bullets
 from ..config.templates_config import get_template_file
 from app.models.resume import Resume
 from app.extensions import db
+from datetime import datetime, time
+import pytz
 
 resume_bp = Blueprint("resume", __name__)
 
@@ -31,7 +33,23 @@ def to_li(items):
 def index():
 
     if request.method == "POST":
-
+        # ---------- MONETIZATION LIMIT CHECK ----------
+        if not current_user.is_premium:
+            # Get IST midnight
+            ist = pytz.timezone('Asia/Kolkata')
+            now_ist = datetime.now(ist)
+            midnight_ist = ist.localize(datetime.combine(now_ist.date(), time.min))
+            
+            # Count resumes generated today
+            daily_generates = Resume.query.filter(
+                Resume.user_id == current_user.id,
+                Resume.created_at >= midnight_ist
+            ).count()
+            
+            if daily_generates >= 10:
+                flash("You have reached your daily limit of 10 free generated resumes. Upgrade to Pro for unlimited generation!", "danger")
+                return redirect(url_for('dashboard.upgrade'))
+                
         # ---------- EXPERIENCE ----------
 
         titles = request.form.getlist("exp_title[]")

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Download Payment - Premium Resume Builders{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-header">
+        <h1>Download Your Resume: {{ resume.title }}</h1>
+        <p>You're almost there! Complete your payment to unlock your ATS-friendly PDF.</p>
+    </div>
+
+    <div class="checkout-split">
+        <!-- Single Download Option -->
+        <div class="payment-card">
+            <h3>Single Download</h3>
+            <div class="price">₹50<span> per resume</span></div>
+            <p class="description">One-time payment to download this specific resume.</p>
+            
+            <div class="qr-container">
+                <img src="{{ url_for('static', filename='img/mock_upi_50.png') }}" alt="UPI QR Code - 50 INR"  class="qr-code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=mock@upi&pn=ResumeBuilder&am=50.00&cu=INR'"/>
+            </div>
+            <p class="instruction">Scan the QR code using any UPI app (GPay, PhonePe, Paytm)</p>
+            
+            <form action="{{ url_for('dashboard.verify_payment', resume_id=resume.id) }}" method="POST">
+                <button type="submit" class="btn btn-primary" onclick="alert('This is a mock payment gateway. Skipping actual verification.');">I Have Paid ₹50</button>
+            </form>
+        </div>
+
+        <!-- Pro Upgrade Option -->
+        <div class="payment-card premium">
+            <div class="popular-badge">Best Value!</div>
+            <h3>Premium Pro</h3>
+            <div class="price">₹1,00,000<span> / forever</span></div>
+            <p class="description">Unlimited resume generation and 100 downloads per day.</p>
+            
+            <div class="qr-container">
+                <img src="{{ url_for('static', filename='img/mock_upi_1lakh.png') }}" alt="UPI QR Code - 1 Lakh INR" class="qr-code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=mock@upi&pn=ResumeBuilder&am=100000.00&cu=INR'"/>
+            </div>
+            <p class="instruction">Scan the QR code to unlock Premium Pro forever.</p>
+            
+            <form action="{{ url_for('dashboard.upgrade_pro') }}" method="POST">
+                <button type="submit" class="btn btn-primary" onclick="alert('This is a mock payment gateway. Giving you Pro status automatically for testing!');">I Have Paid ₹1,00,000</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+}
+.payment-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+.payment-header h1 {
+    font-size: 2.2rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+.payment-header p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+}
+.checkout-split {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+.payment-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    position: relative;
+    border: 2px solid #ecf0f1;
+    text-align: center;
+}
+.payment-card.premium {
+    border-color: #3498db;
+    background-color: #fcfdfe;
+}
+.popular-badge {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f39c12;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+}
+.payment-card h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-top: 1rem;
+}
+.price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #2c3e50;
+    margin: 1rem 0;
+}
+.price span {
+    font-size: 1rem;
+    font-weight: normal;
+    color: #7f8c8d;
+}
+.description {
+    color: #34495e;
+    margin-bottom: 2rem;
+    line-height: +1.5;
+}
+.qr-container {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    border: 1px dashed #bdc3c7;
+}
+.qr-code {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+}
+.instruction {
+    font-size: 0.9rem;
+    color: #95a5a6;
+    margin-bottom: 2rem;
+}
+.btn {
+    display: block;
+    width: 100%;
+    padding: 1.2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
