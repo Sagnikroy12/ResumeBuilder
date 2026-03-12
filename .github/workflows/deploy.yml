@@ -52,7 +52,9 @@ jobs:
     steps:
       - name: Check application health
         run: |
-          curl -f https://your-app-url.com || exit 1
-        retries: 3
-        retry_wait_seconds: 10
+          for i in 1 2 3; do
+            curl -f https://your-app-url.com && exit 0
+            sleep 10
+          done
+          exit 1
         continue-on-error: true
