@@ -17,38 +17,67 @@
     {% endwith %}
 
     <div class="creation-options">
-        <h3>Create a New Resume</h3>
+        <h3>✨ Quick Create</h3>
         <div class="options-grid">
             <a href="{{ url_for('resume.index') }}" class="option-card">
                 <div class="option-icon">✍️</div>
                 <h4>Manual</h4>
-                <p>Build your resume step-by-step from scratch.</p>
+                <p>Build from scratch</p>
             </a>
             <a href="{{ url_for('resume.ai_create') }}" class="option-card">
-                <div class="option-icon">✨</div>
+                <div class="option-icon">🤖</div>
                 <h4>Manual with AI</h4>
-                <p>AI suggestions for every section of your resume.</p>
+                <p>AI-assisted editing</p>
             </a>
             <a href="{{ url_for('resume.upload') }}" class="option-card">
                 <div class="option-icon">📤</div>
                 <h4>Upload & Parse</h4>
-                <p>Upload your resume and we'll organize it for you.</p>
+                <p>Auto-fill from PDF</p>
             </a>
             <a href="{{ url_for('resume.tailor') }}" class="option-card">
                 <div class="option-icon">🎯</div>
                 <h4>Tailor to JD</h4>
-                <p>Optimize your resume for a specific job description.</p>
+                <p>Optimize for jobs</p>
             </a>
         </div>
     </div>
 
+    <!-- DYNAMIC TEMPLATE GALLERY -->
+    <div class="template-gallery-section mt-5">
+        <h3>📋 Choose a Template</h3>
+        <p class="section-subtitle">Pick a visual style to start your professional journey</p>
+        <div class="template-scroll-container">
+            {% for id, template in templates.items() %}
+            <div class="template-tile">
+                <div class="template-preview">
+                    {% if template.thumbnail %}
+                    <img src="{{ url_for('static', filename=template.thumbnail) }}" alt="{{ template.name }}">
+                    {% else %}
+                    <div class="placeholder-preview">No Preview</div>
+                    {% endif %}
+                    <div class="template-overlay">
+                        <a href="{{ url_for('resume.index', template=id) }}" class="btn btn-primary">Start with this</a>
+                    </div>
+                </div>
+                <div class="template-info">
+                    <h4>{{ template.name }}</h4>
+                    <p>{{ template.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <div class="my-resumes mt-5">
-        <h3>My Saved Resumes</h3>
+        <h3>📂 My Saved Resumes</h3>
         <div class="dashboard-grid">
             {% for resume in resumes %}
             <div class="resume-card">
                 <div class="resume-card-header">
                     <h3>{{ resume.title }}</h3>
+                    <form action="{{ url_for('dashboard.delete', resume_id=resume.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this resume?');">
+                        <button type="submit" class="btn-delete-icon" title="Delete Resume">🗑️</button>
+                    </form>
                 </div>
                 <div class="resume-card-body">
                     <p>Created: {{ resume.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
@@ -202,5 +231,107 @@
 .alert-danger { background-color: #fdeaea; color: #e74c3c; border: 1px solid #fadbd8; }
 .alert-success { background-color: #eefaf0; color: #2ecc71; border: 1px solid #d5f5e3; }
 .alert-info { background-color: #ebf5fb; color: #3498db; border: 1px solid #d6eaf8; }
+
+/* TEMPLATE GALLERY */
+.template-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: #3498db #f8f9fa;
+}
+
+.template-tile {
+    flex: 0 0 280px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+    border: 1px solid #e1e8ed;
+}
+
+.template-tile:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+}
+
+.template-preview {
+    position: relative;
+    height: 180px;
+    background: #f1f3f5;
+    overflow: hidden;
+}
+
+.template-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter 0.3s ease;
+}
+
+.template-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(44, 62, 80, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.template-tile:hover .template-overlay {
+    opacity: 1;
+}
+
+.template-info {
+    padding: 1rem;
+}
+
+.template-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.template-info p {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.section-subtitle {
+    color: #7f8c8d;
+    margin-bottom: 1.5rem;
+    margin-top: -1rem;
+}
+
+/* DELETE ICON */
+.resume-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-delete-icon {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.btn-delete-icon:hover {
+    background: rgba(231, 76, 60, 0.2);
+}
 </style>
 {% endblock %}

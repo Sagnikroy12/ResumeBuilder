@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash
+from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 import json
 from io import BytesIO
@@ -8,7 +8,8 @@ from ..utils.text_utils import parse_bullets
 from ..config.templates_config import get_template_file
 from app.models.resume import Resume
 from app.extensions import db
-from app.services.ai_service import AIService
+from ..services.ai_service import AIService
+from ..utils.file_parser import extract_text_from_file
 from datetime import datetime, time
 import pytz
 
@@ -141,13 +142,16 @@ def index():
         flash("Resume successfully generated and saved to your dashboard!", "success")
         return redirect(url_for('dashboard.index'))
 
-    return render_template("form.html")
+    selected_template = request.args.get("template", "template3")
+    return render_template("form.html", selected_template=selected_template)
 
 @resume_bp.route("/ai-create", methods=["GET", "POST"])
 @login_required
 def ai_create():
-    # Placeholder for AI-assisted manual creation
-    return render_template("form.html", ai_enabled=True)
+    # Pass session data if available (from upload/tailor flows)
+    resume_data = session.pop('ai_resume_data', None)
+    selected_template = session.pop('ai_template', 'template3')
+    return render_template("form.html", ai_enabled=True, resume_data=resume_data, selected_template=selected_template)
 
 @resume_bp.route("/upload", methods=["GET", "POST"])
 @login_required
@@ -155,15 +159,24 @@ def upload():
     # Resume upload and parsing
     if request.method == "POST":
         file = request.files.get("resume_file")
+        template = request.form.get("template", "template3")
+        
         if file and file.filename:
-            # Mock content reading
-            content = file.read().decode('utf-8', errors='ignore')
+            content = extract_text_from_file(file)
+            if not content:
+                flash("Could not extract text from the uploaded file.", "danger")
+                return redirect(url_for("resume.upload"))
+                
             extracted_data = AIService.parse_resume(content)
             
-            # For this mock, we'll just flash success and redirect to dashboard
-            # In a real app, we'd pre-populate the form or save directly
-            flash("Resume successfully uploaded and parsed!", "success")
-            return redirect(url_for("dashboard.index"))
+            if isinstance(extracted_data, dict) and "error" not in extracted_data:
+                session['ai_resume_data'] = extracted_data
+                session['ai_template'] = template
+                flash("Resume successfully parsed! Please review and save.", "success")
+                return redirect(url_for("resume.ai_create"))
+            else:
+                flash(f"AI Parsing Error: {extracted_data.get('error') if isinstance(extracted_data, dict) else extracted_data}", "danger")
+                return redirect(url_for("resume.upload"))
             
         flash("No file uploaded.", "danger")
         return redirect(url_for("resume.upload"))
@@ -176,14 +189,24 @@ def tailor():
     if request.method == "POST":
         file = request.files.get("resume_file")
         jd = request.form.get("job_description")
+        template = request.form.get("template", "template3")
         
         if file and file.filename and jd:
-            # Mock content reading
-            content = file.read().decode('utf-8', errors='ignore')
-            tailored_content = AIService.tailor_resume(content, jd)
+            content = extract_text_from_file(file)
+            if not content:
+                flash("Could not extract text from the uploaded file.", "danger")
+                return redirect(url_for("resume.tailor"))
+                
+            tailored_data = AIService.tailor_resume(content, jd)
             
-            flash(f"Resume successfully tailored: {tailored_content}", "success")
-            return redirect(url_for("dashboard.index"))
+            if isinstance(tailored_data, dict) and "error" not in tailored_data:
+                session['ai_resume_data'] = tailored_data
+                session['ai_template'] = template
+                flash("Resume successfully tailored! Please review and save.", "success")
+                return redirect(url_for("resume.ai_create"))
+            else:
+                flash(f"AI Tailoring Error: {tailored_data.get('error') if isinstance(tailored_data, dict) else tailored_data}", "danger")
+                return redirect(url_for("resume.tailor"))
             
         flash("Please provide both a resume file and a job description.", "danger")
         return redirect(url_for("resume.tailor"))

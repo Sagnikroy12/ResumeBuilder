@@ -2,50 +2,55 @@
 DYNAMIC ADD / REMOVE BLOCKS
 =============================== */
 
-function addExperience() {
+function addExperience(initialData = null) {
   const container = document.getElementById("experience-container");
 
   const block = document.createElement("div");
   block.className = "exp-block";
 
   block.innerHTML = `
-    Title <input name="exp_title[]" oninput="updatePreview()">
-    Duration <input name="exp_duration[]" oninput="updatePreview()">
+    Title <input name="exp_title[]" value="${initialData ? (initialData.title || '') : ''}" oninput="updatePreview()">
+    Duration <input name="exp_duration[]" value="${initialData ? (initialData.duration || '') : ''}" oninput="updatePreview()">
     Responsibilities
-    <textarea name="exp_points[]" oninput="updatePreview()"></textarea>
+    <textarea name="exp_points[]" oninput="updatePreview()">${initialData ? (Array.isArray(initialData.points) ? initialData.points.join('\n') : initialData.points || '') : ''}</textarea>
     <button type="button" onclick="removeBlock(this)">Remove</button>
   `;
 
   container.appendChild(block);
   updatePreview();
 
-  // Add AI button for experience if ai_enabled is somehow detected (or just always for now if we want)
   if (typeof aiEnabled !== 'undefined' && aiEnabled) {
     const aiBtn = document.createElement("button");
     aiBtn.type = "button";
     aiBtn.className = "btn-ai";
     aiBtn.innerHTML = "✨ AI Suggest Content";
-    aiBtn.onclick = function() {
+    aiBtn.onclick = function(e) {
         const textarea = block.querySelector('textarea');
         const title = block.querySelector('input[name="exp_title[]"]').value;
-        getAiSuggestion('experience', textarea, title);
+        getAiSuggestion(e, 'experience', textarea, title);
     };
     block.appendChild(aiBtn);
   }
 }
 
-async function getAiSuggestion(section, element = null, context = "") {
+async function getAiSuggestion(event, section, element = null, context = "") {
     const targetElement = element || document.getElementById(section);
+    
+    // If context is empty, try to get value from the field itself (helpful for 'SDET' etc)
+    if (!context && targetElement) {
+        context = targetElement.value || "";
+    }
+
     const originalText = targetElement.innerText || "AI Suggest";
     
     // UI Feedback
-    const btn = event.target;
+    const btn = event.currentTarget;
     const originalBtnText = btn.innerHTML;
     btn.innerHTML = "🌀 Thinking...";
     btn.classList.add("suggesting");
 
     try {
-        const response = await fetch('/resume/api/suggest', {
+        const response = await fetch(suggestApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ section: section, context: context })
@@ -71,15 +76,15 @@ function removeBlock(btn) {
   updatePreview();
 }
 
-function addCustomSection() {
+function addCustomSection(initialData = null) {
   const container = document.getElementById("custom-section-container");
 
   const div = document.createElement("div");
   div.classList.add("custom-section");
 
   div.innerHTML = `
-    <input name="section_title[]" placeholder="Section Title" oninput="updatePreview()">
-    <textarea name="section_points[]" placeholder="One point per line" oninput="updatePreview()"></textarea>
+    <input name="section_title[]" placeholder="Section Title" value="${initialData ? (initialData.title || '') : ''}" oninput="updatePreview()">
+    <textarea name="section_points[]" placeholder="One point per line" oninput="updatePreview()">${initialData ? (Array.isArray(initialData.points) ? initialData.points.join('\n') : initialData.points || '') : ''}</textarea>
     <button type="button" onclick="removeBlock(this)">Remove</button>
   `;
 
@@ -91,19 +96,34 @@ function addCustomSection() {
 PAGE LOAD
 =============================== */
 
-// Function to add cloud character animation to text
-function addCloudAnimation(text) {
-  if (!text) return '';
-  return text
-    .split('')
-    .map((char, index) => {
-      return `<span class="cloud-char" style="animation-delay: ${index * 0.05}s">${char}</span>`;
-    })
-    .join('');
-}
-
 window.onload = function () {
-  addExperience();
+  const expContainer = document.getElementById("experience-container");
+  const customContainer = document.getElementById("custom-section-container");
+  
+  // Clear any default/hardcoded content
+  expContainer.innerHTML = "";
+  customContainer.innerHTML = "";
+
+  if (typeof initialResumeData !== 'undefined' && initialResumeData) {
+    console.log("Populating with initial AI data:", initialResumeData);
+    
+    // Populate Experience
+    if (initialResumeData.experience && Array.isArray(initialResumeData.experience)) {
+      initialResumeData.experience.forEach(exp => addExperience(exp));
+    }
+    
+    // Populate Custom Sections if any
+    if (initialResumeData.custom_sections && Array.isArray(initialResumeData.custom_sections)) {
+      initialResumeData.custom_sections.forEach(sec => addCustomSection(sec));
+    }
+    
+    // If no experience was added, add one empty one
+    if (expContainer.children.length === 0) addExperience();
+  } else {
+    // Standard new resume flow
+    addExperience();
+  }
+  
   updatePreview();
 };
 

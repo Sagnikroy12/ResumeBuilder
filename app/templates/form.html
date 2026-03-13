@@ -30,9 +30,9 @@
           <h3>📋 Template</h3>
 
           <select name="template" id="template" onchange="updatePreview()">
-            <option value="template1">Classic</option>
-            <option value="template2">Modern</option>
-            <option value="template3" selected>Professional</option>
+            <option value="template1" {{ 'selected' if selected_template == 'template1' else '' }}>Classic</option>
+            <option value="template2" {{ 'selected' if selected_template == 'template2' else '' }}>Modern</option>
+            <option value="template3" {{ 'selected' if selected_template == 'template3' or not selected_template else '' }}>Professional</option>
           </select>
 
           <!-- CONTACT -->
@@ -40,7 +40,7 @@
           <h3>👤 Contact Information</h3>
 
           <label>Name</label>
-          <input type="text" name="name" id="name" placeholder="Full Name" oninput="updatePreview()" />
+          <input type="text" name="name" id="name" placeholder="Full Name" oninput="updatePreview()" value="{{ resume_data.name if resume_data and resume_data.name else '' }}" />
 
           <label>Address</label>
           <input
@@ -49,6 +49,7 @@
             id="address"
             placeholder="City, Country"
             oninput="updatePreview()"
+            value="{{ resume_data.address if resume_data and resume_data.address else '' }}"
           />
 
           <label>Phone</label>
@@ -58,6 +59,7 @@
             id="phone"
             placeholder="+1 (555) 123-4567"
             oninput="updatePreview()"
+            value="{{ resume_data.phone if resume_data and resume_data.phone else '' }}"
           />
 
           <label>Email</label>
@@ -67,6 +69,7 @@
             id="email"
             placeholder="your.email@example.com"
             oninput="updatePreview()"
+            value="{{ resume_data.email if resume_data and resume_data.email else '' }}"
           />
 
           <label>LinkedIn</label>
@@ -76,6 +79,7 @@
             id="linkedin"
             placeholder="https://linkedin.com/in/yourprofile"
             oninput="updatePreview()"
+            value="{{ resume_data.linkedin if resume_data and resume_data.linkedin else '' }}"
           />
 
           <!-- SECTIONS CONTAINER -->
@@ -91,9 +95,9 @@
                 id="objective"
                 placeholder="e.g., Seeking a challenging role in software development..."
                 oninput="updatePreview()"
-              ></textarea>
+              >{{ resume_data.objective if resume_data and resume_data.objective else '' }}</textarea>
               {% if ai_enabled %}
-              <button type="button" class="btn-ai" onclick="getAiSuggestion('objective')">✨ AI Suggest</button>
+              <button type="button" class="btn-ai" onclick="getAiSuggestion(event, 'objective')">✨ AI Suggest</button>
               {% endif %}
             </div>
 
@@ -105,14 +109,11 @@
               <textarea
                 name="skills"
                 id="skills"
-                placeholder="One skill per line
-Example:
-Languages: Python, JavaScript, Java
-Frameworks: Flask, React, Django"
+                placeholder="One skill per line..."
                 oninput="updatePreview()"
-              ></textarea>
+              >{{ resume_data.skills if resume_data and resume_data.skills else '' }}</textarea>
               {% if ai_enabled %}
-              <button type="button" class="btn-ai" onclick="getAiSuggestion('skills')">✨ AI Suggest</button>
+              <button type="button" class="btn-ai" onclick="getAiSuggestion(event, 'skills')">✨ AI Suggest</button>
               {% endif %}
             </div>
 
@@ -136,12 +137,9 @@ Frameworks: Flask, React, Django"
               <textarea
                 name="projects"
                 id="projects"
-                placeholder="One project per line
-Example:
-Web App - Built a real-time collaboration tool with React
-Mobile App - Developed iOS app for fitness tracking"
+                placeholder="One project per line..."
                 oninput="updatePreview()"
-              ></textarea>
+              >{{ resume_data.projects if resume_data and resume_data.projects else '' }}</textarea>
             </div>
 
             <!-- EDUCATION -->
@@ -152,9 +150,9 @@ Mobile App - Developed iOS app for fitness tracking"
               <textarea
                 name="education"
                 id="education"
-                placeholder="e.g., Bachelor's Degree in Computer Science - University Name, Graduation: 2020"
+                placeholder="e.g., BSCS - University Name..."
                 oninput="updatePreview()"
-              ></textarea>
+              >{{ resume_data.education if resume_data and resume_data.education else '' }}</textarea>
             </div>
 
             <!-- CERTIFICATIONS -->
@@ -165,12 +163,9 @@ Mobile App - Developed iOS app for fitness tracking"
               <textarea
                 name="certifications"
                 id="certifications"
-                placeholder="One certification per line
-Example:
-AWS Certified Solutions Architect
-Google Cloud Professional Data Engineer"
+                placeholder="One cert per line..."
                 oninput="updatePreview()"
-              ></textarea>
+              >{{ resume_data.certifications if resume_data and resume_data.certifications else '' }}</textarea>
             </div>
 
             <!-- CUSTOM SECTIONS -->
@@ -230,6 +225,10 @@ Google Cloud Professional Data Engineer"
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
-    <script>const aiEnabled = {{ ai_enabled | tojson if ai_enabled is defined else 'false' }};</script>
+    <script>
+      const aiEnabled = {{ ai_enabled | tojson if ai_enabled is defined else 'false' }};
+      const suggestApiUrl = "{{ url_for('resume.suggest') }}";
+      const initialResumeData = {{ resume_data | tojson if resume_data else 'null' }};
+    </script>
     <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

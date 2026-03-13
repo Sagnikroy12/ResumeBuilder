@@ -7,7 +7,7 @@ from app.models.resume import Resume
 from app.models.download import Download
 from app.extensions import db
 from app.services.pdf_service import generate_pdf
-from app.config.templates_config import get_template_file
+from app.config.templates_config import get_template_file, get_all_templates
 from datetime import datetime, time
 import pytz
 
@@ -17,7 +17,8 @@ dashboard_bp = Blueprint("dashboard", __name__)
 @login_required
 def index():
     resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.created_at.desc()).all()
-    return render_template("dashboard/index.html", resumes=resumes)
+    templates = get_all_templates()
+    return render_template("dashboard/index.html", resumes=resumes, templates=templates)
 
 @dashboard_bp.route("/download/<int:resume_id>")
 @login_required
@@ -115,3 +116,18 @@ def upgrade_pro():
 @login_required
 def upgrade():
     return render_template("auth/upgrade.html")
+
+@dashboard_bp.route("/delete/<int:resume_id>", methods=["POST"])
+@login_required
+def delete(resume_id):
+    resume = Resume.query.get_or_404(resume_id)
+    
+    if resume.user_id != current_user.id:
+        flash("You are not authorized to delete this resume.", "danger")
+        return redirect(url_for("dashboard.index"))
+        
+    db.session.delete(resume)
+    db.session.commit()
+    
+    flash("Resume deleted successfully!", "success")
+    return redirect(url_for("dashboard.index"))

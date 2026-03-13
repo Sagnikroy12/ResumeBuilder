@@ -10,17 +10,20 @@ TEMPLATES = {
     "template1": {
         "name": "Classic",
         "file": "resume_template.html",
-        "description": "Classic style with skills in 2 columns"
+        "description": "Classic style with skills in 2 columns",
+        "thumbnail": "img/templates/classic.png"
     },
     "template2": {
         "name": "Modern",
         "file": "resume_template2.html",
-        "description": "Modern style with clean layout"
+        "description": "Modern style with clean layout",
+        "thumbnail": "img/templates/modern.png"
     },
     "template3": {
     "name": "Professional",
     "file": "resume_template3.html",
-    "description": "Clean ATS-optimized professional layout"
+    "description": "Clean ATS-optimized professional layout",
+    "thumbnail": "img/templates/professional.png"
     },
     # To add a new template:
     # "template3": {

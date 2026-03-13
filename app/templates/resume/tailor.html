@@ -10,6 +10,15 @@
     <div class="card p-4 mt-4">
         <form action="{{ url_for('resume.tailor') }}" method="post" enctype="multipart/form-data">
             <div class="mb-3">
+                <label for="template" class="form-label">Choose a Template</label>
+                <select name="template" id="template" class="form-select mb-2">
+                    <option value="template1">Classic - Traditional, clean layout</option>
+                    <option value="template2">Modern - Contemporary, space-efficient</option>
+                    <option value="template3" selected>Professional - ATS-optimized, bold headers</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
                 <label for="resume_file" class="form-label">Select Your Resume</label>
                 <input class="form-control" type="file" id="resume_file" name="resume_file" accept=".pdf,.doc,.docx,.txt" required>
             </div>
