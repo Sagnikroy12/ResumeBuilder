@@ -39,6 +39,14 @@ class Config:
     # API Configuration
     JSON_SORT_KEYS = False
     JSONIFY_PRETTYPRINT_REGULAR = False
+    
+    # Razorpay Configuration
+    RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
+    
+    # Payment amounts (in paisa)
+    SINGLE_DOWNLOAD_AMOUNT = 5000  # ₹50
+    PREMIUM_SUBSCRIPTION_AMOUNT = 10000000  # ₹1,00,000
 
 class DevelopmentConfig(Config):
     """Development configuration"""

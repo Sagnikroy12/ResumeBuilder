@@ -3,7 +3,7 @@ from flask import Flask
 from .models import User, Resume
 from .routes.resume_routes import resume_bp
 from .config.config import get_config
-from .extensions import db, login_manager, bcrypt, migrate
+from .extensions import db, login_manager, bcrypt, migrate, init_razorpay
 
 def create_app(config_name=None):
     """Application factory"""
@@ -22,15 +22,20 @@ def create_app(config_name=None):
     bcrypt.init_app(app)
     migrate.init_app(app, db)
     
+    # Initialize Razorpay
+    init_razorpay(app)
+    
     # Ensure upload folder exists
     os.makedirs(app.config.get("UPLOAD_FOLDER", "uploads"), exist_ok=True)
     
     # Register blueprints
     from .routes.auth_routes import auth_bp
     from .routes.dashboard_routes import dashboard_bp
+    from .routes.payment_routes import payment_bp
     app.register_blueprint(resume_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(payment_bp, url_prefix='/payment')
     
     # Error handlers
     @app.errorhandler(404)

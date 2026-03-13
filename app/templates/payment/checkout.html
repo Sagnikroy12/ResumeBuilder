@@ -2,6 +2,10 @@
 
 {% block title %}Download Payment - Premium Resume Builders{% endblock %}
 
+{% block head %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="payment-container">
     <div class="payment-header">
@@ -15,35 +19,253 @@
             <h3>Single Download</h3>
             <div class="price">₹50<span> per resume</span></div>
             <p class="description">One-time payment to download this specific resume.</p>
-            
-            <div class="qr-container">
-                <img src="{{ url_for('static', filename='img/mock_upi_50.png') }}" alt="UPI QR Code - 50 INR"  class="qr-code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=mock@upi&pn=ResumeBuilder&am=50.00&cu=INR'"/>
-            </div>
-            <p class="instruction">Scan the QR code using any UPI app (GPay, PhonePe, Paytm)</p>
-            
-            <form action="{{ url_for('dashboard.verify_payment', resume_id=resume.id) }}" method="POST">
-                <button type="submit" class="btn btn-primary" onclick="alert('This is a mock payment gateway. Skipping actual verification.');">I Have Paid ₹50</button>
-            </form>
+
+            <button type="button" class="btn btn-primary" onclick="payForDownload({{ resume.id }})">
+                Pay ₹50 & Download
+            </button>
         </div>
 
         <!-- Pro Upgrade Option -->
         <div class="payment-card premium">
             <div class="popular-badge">Best Value!</div>
             <h3>Premium Pro</h3>
-            <div class="price">₹1,00,000<span> / forever</span></div>
-            <p class="description">Unlimited resume generation and 100 downloads per day.</p>
-            
-            <div class="qr-container">
-                <img src="{{ url_for('static', filename='img/mock_upi_1lakh.png') }}" alt="UPI QR Code - 1 Lakh INR" class="qr-code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=mock@upi&pn=ResumeBuilder&am=100000.00&cu=INR'"/>
-            </div>
-            <p class="instruction">Scan the QR code to unlock Premium Pro forever.</p>
-            
-            <form action="{{ url_for('dashboard.upgrade_pro') }}" method="POST">
-                <button type="submit" class="btn btn-primary" onclick="alert('This is a mock payment gateway. Giving you Pro status automatically for testing!');">I Have Paid ₹1,00,000</button>
-            </form>
+            <div class="price">₹1,00,000<span> / 45 days</span></div>
+            <p class="description">Unlimited resume generation and 100 downloads per day for 45 days.</p>
+
+            <button type="button" class="btn btn-primary" onclick="payForPremium()">
+                Upgrade to Premium
+            </button>
         </div>
     </div>
 </div>
+
+<script>
+function payForDownload(resumeId) {
+    fetch(`/payment/create-order/${resumeId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+
+        const options = {
+            key: data.key,
+            amount: data.amount,
+            currency: data.currency,
+            order_id: data.order_id,
+            name: 'Resume Builder',
+            description: 'Single Resume Download',
+            handler: function (response) {
+                // Verify payment
+                fetch('/payment/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(res => res.json())
+                .then(verification => {
+                    if (verification.success) {
+                        window.location.href = verification.redirect;
+                    } else {
+                        alert('Payment verification failed: ' + verification.error);
+                        window.location.href = '/payment/payment-failed';
+                    }
+                })
+                .catch(error => {
+                    alert('Verification error: ' + error);
+                    window.location.href = '/payment/payment-failed';
+                });
+            },
+            prefill: {
+                name: '{{ current_user.username }}',
+                email: '{{ current_user.email }}'
+            },
+            theme: {
+                color: '#667eea'
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+    })
+    .catch(error => {
+        alert('Error creating payment: ' + error);
+    });
+}
+
+function payForPremium() {
+    fetch('/payment/create-premium-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+
+        const options = {
+            key: data.key,
+            amount: data.amount,
+            currency: data.currency,
+            order_id: data.order_id,
+            name: 'Resume Builder',
+            description: 'Premium Pro Subscription (45 days)',
+            handler: function (response) {
+                // Verify payment
+                fetch('/payment/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(res => res.json())
+                .then(verification => {
+                    if (verification.success) {
+                        window.location.href = verification.redirect;
+                    } else {
+                        alert('Payment verification failed: ' + verification.error);
+                        window.location.href = '/payment/payment-failed';
+                    }
+                })
+                .catch(error => {
+                    alert('Verification error: ' + error);
+                    window.location.href = '/payment/payment-failed';
+                });
+            },
+            prefill: {
+                name: '{{ current_user.username }}',
+                email: '{{ current_user.email }}'
+            },
+            theme: {
+                color: '#667eea'
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+    })
+    .catch(error => {
+        alert('Error creating payment: ' + error);
+    });
+}
+</script>
+
+<style>
+.payment-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+}
+.payment-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+.payment-header h1 {
+    font-size: 2.2rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+.payment-header p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+}
+.checkout-split {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+.payment-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    position: relative;
+    border: 2px solid #ecf0f1;
+    text-align: center;
+}
+.payment-card.premium {
+    border-color: #3498db;
+    background-color: #fcfdfe;
+}
+.popular-badge {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f39c12;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+}
+.payment-card h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+.price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+.price span {
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #7f8c8d;
+}
+.description {
+    color: #555;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+.btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}
 
 <style>
 .payment-container {

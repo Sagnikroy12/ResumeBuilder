@@ -34,7 +34,7 @@ def download(resume_id):
     now_ist = datetime.now(ist)
     midnight_ist = ist.localize(datetime.combine(now_ist.date(), time.min))
             
-    if not current_user.is_premium:
+    if not current_user.is_premium_active():
         
         # Count downloads today
         daily_downloads = Download.query.filter(
@@ -43,12 +43,10 @@ def download(resume_id):
         ).count()
         
         if daily_downloads >= 10:
-            flash("You have reached your daily limit of 10 free downloads. Upgrade to Pro for 100 downloads!", "danger")
+            flash("You have reached your daily limit of 10 free downloads. Upgrade to Pro for unlimited downloads!", "danger")
             return redirect(url_for("dashboard.upgrade"))
             
         # Basic user wants to download -> redirect to payment gateway (50 INR)
-        # Note: If they actually paid, we would skip this via a database flag, 
-        # but the prompt requires presenting the choice upon clicking download.
         return redirect(url_for("dashboard.payment", resume_id=resume.id))
         
     else:
@@ -105,11 +103,10 @@ def verify_payment(resume_id):
 @dashboard_bp.route("/upgrade_pro", methods=["POST"])
 @login_required
 def upgrade_pro():
-    """Mock endpoint to grant Pro status for 100k INR"""
-    current_user.is_premium = True
-    db.session.commit()
-    flash("Congratulations! You are now a Premium Pro member.", "success")
-    return redirect(url_for("dashboard.index"))
+    """Mock endpoint to grant Pro status for 100k INR - DEPRECATED: Use Razorpay payment"""
+    # This is kept for backward compatibility but should redirect to proper payment
+    flash("Please use the proper payment gateway for premium subscription.", "warning")
+    return redirect(url_for("dashboard.upgrade"))
 
 @dashboard_bp.route("/upgrade")
 @login_required

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Successful - Premium Resume Builder{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-card">
+        <div class="success-icon">✅</div>
+        <h1>Payment Successful!</h1>
+        <p>Your payment has been processed successfully. You now have access to premium features.</p>
+
+        <div class="success-details">
+            <h3>What you get:</h3>
+            <ul>
+                <li>✅ Unlimited resume downloads (100 per day)</li>
+                <li>✅ Access to all premium templates</li>
+                <li>✅ ATS optimization tools</li>
+                <li>✅ Priority support</li>
+            </ul>
+        </div>
+
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+</div>
+
+<style>
+.success-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+}
+
+.success-card {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.success-card h1 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.success-card p {
+    color: #7f8c8d;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.success-details {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.success-details h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.success-details ul {
+    list-style: none;
+    padding: 0;
+}
+
+.success-details li {
+    color: #555;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.success-details li::before {
+    content: "✓";
+    color: #28a745;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+</style>
+{% endblock %}

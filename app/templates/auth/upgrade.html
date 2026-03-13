@@ -24,20 +24,121 @@
             <button class="btn btn-outline" disabled>Current Plan</button>
         </div>
 
+{% extends "base.html" %}
+
+{% block title %}Upgrade to Pro - Premium Resume Builder{% endblock %}
+
+{% block head %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="upgrade-container">
+    <div class="upgrade-header">
+        <h1>Unlock Your Career Potential</h1>
+        <p>Upgrade to Premium Pro to download unlimited high-quality resumes tailored for ATS systems.</p>
+    </div>
+
+    <div class="pricing-cards">
+        <!-- Free Tier -->
+        <div class="pricing-card">
+            <h3>Basic</h3>
+            <div class="price">$0<span>/forever</span></div>
+            <ul class="features">
+                <li>✅ Create unlimited resumes</li>
+                <li>✅ Access 3 free templates</li>
+                <li>✅ Auto-save to dashboard</li>
+                <li class="disabled">❌ Download as PDF/Word</li>
+                <li class="disabled">❌ ATS Optimization Tools</li>
+            </ul>
+            <button class="btn btn-outline" disabled>Current Plan</button>
+        </div>
+
         <!-- Pro Tier -->
         <div class="pricing-card premium">
             <div class="popular-badge">Most Popular</div>
             <h3>Premium Pro</h3>
-            <div class="price">$9<span>.99/month</span></div>
+            <div class="price">₹1,00,000<span> / 45 days</span></div>
             <ul class="features">
                 <li>✅ Create unlimited resumes</li>
                 <li>✅ Access all 20+ premium templates</li>
                 <li>✅ Dashboard & Cloud Sync</li>
                 <li>✅ <strong>Unlimited PDF Downloads</strong></li>
                 <li>✅ AI-Driven ATS Analysis</li>
+                <li>✅ 100 downloads per day</li>
+                <li>✅ Priority support</li>
             </ul>
-            <a href="#" class="btn btn-primary" onclick="alert('This is a mock payment integration for demonstration purposes.');">Upgrade Now</a>
+            <button class="btn btn-primary" onclick="upgradeToPremium()">Upgrade Now</button>
         </div>
+    </div>
+</div>
+
+<script>
+function upgradeToPremium() {
+    fetch('/payment/create-premium-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+
+        const options = {
+            key: data.key,
+            amount: data.amount,
+            currency: data.currency,
+            order_id: data.order_id,
+            name: 'Resume Builder',
+            description: 'Premium Pro Subscription (45 days)',
+            handler: function (response) {
+                // Verify payment
+                fetch('/payment/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(res => res.json())
+                .then(verification => {
+                    if (verification.success) {
+                        window.location.href = verification.redirect;
+                    } else {
+                        alert('Payment verification failed: ' + verification.error);
+                        window.location.href = '/payment/payment-failed';
+                    }
+                })
+                .catch(error => {
+                    alert('Verification error: ' + error);
+                    window.location.href = '/payment/payment-failed';
+                });
+            },
+            prefill: {
+                name: '{{ current_user.username }}',
+                email: '{{ current_user.email }}'
+            },
+            theme: {
+                color: '#667eea'
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+    })
+    .catch(error => {
+        alert('Error creating payment: ' + error);
+    });
+}
+</script>
     </div>
 </div>
 
