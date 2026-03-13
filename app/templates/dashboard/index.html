@@ -6,7 +6,6 @@
 <div class="dashboard-container">
     <div class="dashboard-header">
         <h2>Welcome to your Dashboard, {{ current_user.username }}!</h2>
-        <a href="{{ url_for('resume.index') }}" class="btn btn-primary">+ Create New Resume</a>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -17,27 +16,55 @@
         {% endif %}
     {% endwith %}
 
-    <div class="dashboard-grid">
-        {% for resume in resumes %}
-        <div class="resume-card">
-            <div class="resume-card-header">
-                <h3>{{ resume.title }}</h3>
-            </div>
-            <div class="resume-card-body">
-                <p>Created: {{ resume.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                <div class="resume-actions">
-                    <a href="{{ url_for('dashboard.download', resume_id=resume.id) }}" class="btn btn-secondary">
-                        📥 Download PDF
-                    </a>
+    <div class="creation-options">
+        <h3>Create a New Resume</h3>
+        <div class="options-grid">
+            <a href="{{ url_for('resume.index') }}" class="option-card">
+                <div class="option-icon">✍️</div>
+                <h4>Manual</h4>
+                <p>Build your resume step-by-step from scratch.</p>
+            </a>
+            <a href="{{ url_for('resume.ai_create') }}" class="option-card">
+                <div class="option-icon">✨</div>
+                <h4>Manual with AI</h4>
+                <p>AI suggestions for every section of your resume.</p>
+            </a>
+            <a href="{{ url_for('resume.upload') }}" class="option-card">
+                <div class="option-icon">📤</div>
+                <h4>Upload & Parse</h4>
+                <p>Upload your resume and we'll organize it for you.</p>
+            </a>
+            <a href="{{ url_for('resume.tailor') }}" class="option-card">
+                <div class="option-icon">🎯</div>
+                <h4>Tailor to JD</h4>
+                <p>Optimize your resume for a specific job description.</p>
+            </a>
+        </div>
+    </div>
+
+    <div class="my-resumes mt-5">
+        <h3>My Saved Resumes</h3>
+        <div class="dashboard-grid">
+            {% for resume in resumes %}
+            <div class="resume-card">
+                <div class="resume-card-header">
+                    <h3>{{ resume.title }}</h3>
+                </div>
+                <div class="resume-card-body">
+                    <p>Created: {{ resume.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <div class="resume-actions">
+                        <a href="{{ url_for('dashboard.download', resume_id=resume.id) }}" class="btn btn-secondary">
+                            📥 Download PDF
+                        </a>
+                    </div>
                 </div>
             </div>
+            {% else %}
+            <div class="empty-state">
+                <p>You haven't created any resumes yet.</p>
+            </div>
+            {% endfor %}
         </div>
-        {% else %}
-        <div class="empty-state">
-            <p>You haven't created any resumes yet.</p>
-            <a href="{{ url_for('resume.index') }}" class="btn btn-primary">Create Your First Resume</a>
-        </div>
-        {% endfor %}
     </div>
 </div>
 
@@ -48,13 +75,51 @@
     padding: 2rem;
 }
 .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 2rem;
 }
-.dashboard-header h2 {
+.creation-options {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+.creation-options h3, .my-resumes h3 {
     color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+.option-card {
+    background: white;
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    border: 1px solid #e1e8ed;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+.option-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    border-color: #3498db;
+}
+.option-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+.option-card h4 {
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+.option-card p {
+    font-size: 0.9rem;
+    color: #7f8c8d;
     margin: 0;
 }
 .dashboard-grid {

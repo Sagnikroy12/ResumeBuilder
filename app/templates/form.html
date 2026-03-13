@@ -92,6 +92,9 @@
                 placeholder="e.g., Seeking a challenging role in software development..."
                 oninput="updatePreview()"
               ></textarea>
+              {% if ai_enabled %}
+              <button type="button" class="btn-ai" onclick="getAiSuggestion('objective')">✨ AI Suggest</button>
+              {% endif %}
             </div>
 
             <!-- SKILLS -->
@@ -108,6 +111,9 @@ Languages: Python, JavaScript, Java
 Frameworks: Flask, React, Django"
                 oninput="updatePreview()"
               ></textarea>
+              {% if ai_enabled %}
+              <button type="button" class="btn-ai" onclick="getAiSuggestion('skills')">✨ AI Suggest</button>
+              {% endif %}
             </div>
 
             <!-- EXPERIENCE -->
@@ -199,9 +205,31 @@ Google Cloud Professional Data Engineer"
       </div>
     </div>
 
+    <style>
+      .btn-ai {
+        background-color: #9b59b6;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        margin-top: 5px;
+        transition: background-color 0.3s;
+      }
+      .btn-ai:hover {
+        background-color: #8e44ad;
+      }
+      .suggesting {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+    </style>
+
     <!-- LIBRARIES -->
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
+    <script>const aiEnabled = {{ ai_enabled | tojson if ai_enabled is defined else 'false' }};</script>
     <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

@@ -8,7 +8,7 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('resume.index'))
+        return redirect(url_for('dashboard.index'))
         
     if request.method == 'POST':
         username = request.form.get('username')
@@ -35,7 +35,7 @@ def register():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('resume.index'))
+        return redirect(url_for('dashboard.index'))
         
     if request.method == 'POST':
         email = request.form.get('email')
@@ -46,7 +46,7 @@ def login():
             login_user(user, remember=request.form.get('remember'))
             next_page = request.args.get('next')
             flash('Login Successful!', 'success')
-            return redirect(next_page) if next_page else redirect(url_for('resume.index'))
+            return redirect(next_page) if next_page else redirect(url_for('dashboard.index'))
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
             
@@ -57,4 +57,4 @@ def login():
 def logout():
     logout_user()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('resume.index'))
+    return redirect(url_for('dashboard.index'))

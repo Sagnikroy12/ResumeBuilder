@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resume - Premium Resume Builder{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Upload Your Resume</h2>
+    <p class="text-muted">Upload your existing resume (PDF, Word, or Text) to parse and reorder it according to our templates.</p>
+    
+    <div class="card p-4 mt-4">
+        <form action="{{ url_for('resume.upload') }}" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="resume_file" class="form-label">Select Resume File</label>
+                <input class="form-control" type="file" id="resume_file" name="resume_file" accept=".pdf,.doc,.docx,.txt" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload and Parse</button>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

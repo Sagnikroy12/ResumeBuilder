@@ -8,6 +8,7 @@ from ..utils.text_utils import parse_bullets
 from ..config.templates_config import get_template_file
 from app.models.resume import Resume
 from app.extensions import db
+from app.services.ai_service import AIService
 from datetime import datetime, time
 import pytz
 
@@ -141,3 +142,58 @@ def index():
         return redirect(url_for('dashboard.index'))
 
     return render_template("form.html")
+
+@resume_bp.route("/ai-create", methods=["GET", "POST"])
+@login_required
+def ai_create():
+    # Placeholder for AI-assisted manual creation
+    return render_template("form.html", ai_enabled=True)
+
+@resume_bp.route("/upload", methods=["GET", "POST"])
+@login_required
+def upload():
+    # Resume upload and parsing
+    if request.method == "POST":
+        file = request.files.get("resume_file")
+        if file and file.filename:
+            # Mock content reading
+            content = file.read().decode('utf-8', errors='ignore')
+            extracted_data = AIService.parse_resume(content)
+            
+            # For this mock, we'll just flash success and redirect to dashboard
+            # In a real app, we'd pre-populate the form or save directly
+            flash("Resume successfully uploaded and parsed!", "success")
+            return redirect(url_for("dashboard.index"))
+            
+        flash("No file uploaded.", "danger")
+        return redirect(url_for("resume.upload"))
+    return render_template("resume/upload.html")
+
+@resume_bp.route("/tailor", methods=["GET", "POST"])
+@login_required
+def tailor():
+    # JD-based tailoring
+    if request.method == "POST":
+        file = request.files.get("resume_file")
+        jd = request.form.get("job_description")
+        
+        if file and file.filename and jd:
+            # Mock content reading
+            content = file.read().decode('utf-8', errors='ignore')
+            tailored_content = AIService.tailor_resume(content, jd)
+            
+            flash(f"Resume successfully tailored: {tailored_content}", "success")
+            return redirect(url_for("dashboard.index"))
+            
+        flash("Please provide both a resume file and a job description.", "danger")
+        return redirect(url_for("resume.tailor"))
+    return render_template("resume/tailor.html")
+
+@resume_bp.route("/api/suggest", methods=["POST"])
+@login_required
+def suggest():
+    data = request.json
+    section = data.get("section")
+    context = data.get("context", "")
+    suggestion = AIService.get_suggestion(section, context)
+    return {"suggestion": suggestion}

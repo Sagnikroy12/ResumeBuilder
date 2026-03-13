@@ -18,6 +18,52 @@ function addExperience() {
 
   container.appendChild(block);
   updatePreview();
+
+  // Add AI button for experience if ai_enabled is somehow detected (or just always for now if we want)
+  if (typeof aiEnabled !== 'undefined' && aiEnabled) {
+    const aiBtn = document.createElement("button");
+    aiBtn.type = "button";
+    aiBtn.className = "btn-ai";
+    aiBtn.innerHTML = "✨ AI Suggest Content";
+    aiBtn.onclick = function() {
+        const textarea = block.querySelector('textarea');
+        const title = block.querySelector('input[name="exp_title[]"]').value;
+        getAiSuggestion('experience', textarea, title);
+    };
+    block.appendChild(aiBtn);
+  }
+}
+
+async function getAiSuggestion(section, element = null, context = "") {
+    const targetElement = element || document.getElementById(section);
+    const originalText = targetElement.innerText || "AI Suggest";
+    
+    // UI Feedback
+    const btn = event.target;
+    const originalBtnText = btn.innerHTML;
+    btn.innerHTML = "🌀 Thinking...";
+    btn.classList.add("suggesting");
+
+    try {
+        const response = await fetch('/resume/api/suggest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ section: section, context: context })
+        });
+        const data = await response.json();
+        
+        if (data.suggestion) {
+            if (targetElement.tagName === 'TEXTAREA' || targetElement.tagName === 'INPUT') {
+                targetElement.value = data.suggestion;
+                updatePreview();
+            }
+        }
+    } catch (error) {
+        console.error("AI Error:", error);
+    } finally {
+        btn.innerHTML = originalBtnText;
+        btn.classList.remove("suggesting");
+    }
 }
 
 function removeBlock(btn) {
