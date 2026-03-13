@@ -10,19 +10,19 @@ TEMPLATES = {
     "template1": {
         "name": "Classic",
         "file": "resume_template.html",
-        "description": "Classic style with skills in 2 columns",
+        "description": "Centered elegant layout with symmetric headers and 2-column skills section. Professional Times New Roman aesthetic.",
         "thumbnail": "img/templates/classic.png"
     },
     "template2": {
         "name": "Modern",
         "file": "resume_template2.html",
-        "description": "Modern style with clean layout",
+        "description": "Elegant asymmetrical header with name on left and contact info on right. Clean single-column section flow.",
         "thumbnail": "img/templates/modern.png"
     },
     "template3": {
     "name": "Professional",
     "file": "resume_template3.html",
-    "description": "Clean ATS-optimized professional layout",
+    "description": "ATS-optimized minimalist layout with clean line separators and high readability. Perfect for corporate applications.",
     "thumbnail": "img/templates/professional.png"
     },
     # To add a new template:
