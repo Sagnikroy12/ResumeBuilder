@@ -27,7 +27,7 @@
         <form method="POST" id="resume-form">
           <!-- TEMPLATE -->
 
-          <h3>📋 Template</h3>
+          <h3 style="color: white;">📋 Template</h3>
 
           <select name="template" id="template" onchange="updatePreview()">
             <option value="template1" {{ 'selected' if selected_template == 'template1' else '' }}>Classic</option>
@@ -37,7 +37,7 @@
 
           <!-- CONTACT -->
 
-          <h3>👤 Contact Information</h3>
+          <h3 style="color: white;">👤 Contact Information</h3>
 
           <label>Name</label>
           <input type="text" name="name" id="name" placeholder="Full Name" oninput="updatePreview()" value="{{ resume_data.name if resume_data and resume_data.name else '' }}" />

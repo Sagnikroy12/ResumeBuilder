@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash
+from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 import json
 from io import BytesIO
@@ -13,66 +13,72 @@ import pytz
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
-@dashboard_bp.route("/dashboard")
+@dashboard_bp.route("/api/dashboard")
 @login_required
 def index():
     resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.created_at.desc()).all()
     templates = get_all_templates()
-    return render_template("dashboard/index.html", resumes=resumes, templates=templates)
+    
+    resumes_json = [{
+        "id": r.id,
+        "title": r.title,
+        "created_at": r.created_at.isoformat(),
+        "template": r.template_id
+    } for r in resumes]
+    
+    return jsonify({
+        "resumes": resumes_json,
+        "templates": templates
+    }), 200
 
-@dashboard_bp.route("/download/<int:resume_id>")
+@dashboard_bp.route("/api/download/<int:resume_id>")
 @login_required
 def download(resume_id):
     resume = Resume.query.get_or_404(resume_id)
     
-    # Ensure a user only downloads their own resume
     if resume.user_id != current_user.id:
-        flash("You are not authorized to view this resume.", "danger")
-        return redirect(url_for("dashboard.index"))
+        return jsonify({"message": "You are not authorized to view this resume.", "status": "danger"}), 403
         
-    # Monetization check
     ist = pytz.timezone('Asia/Kolkata')
     now_ist = datetime.now(ist)
     midnight_ist = ist.localize(datetime.combine(now_ist.date(), time.min))
             
     if not current_user.is_premium:
-        
-        # Count downloads today
         daily_downloads = Download.query.filter(
             Download.user_id == current_user.id,
             Download.downloaded_at >= midnight_ist
         ).count()
         
         if daily_downloads >= 10:
-            flash("You have reached your daily limit of 10 free downloads. Upgrade to Pro for 100 downloads!", "danger")
-            return redirect(url_for("dashboard.upgrade"))
+            return jsonify({
+                "message": "Limit reached", 
+                "status": "danger", 
+                "redirect": "/upgrade"
+            }), 403
             
-        # Basic user wants to download -> redirect to payment gateway (50 INR)
-        # Note: If they actually paid, we would skip this via a database flag, 
-        # but the prompt requires presenting the choice upon clicking download.
-        return redirect(url_for("dashboard.payment", resume_id=resume.id))
+        return jsonify({
+            "message": "Payment required", 
+            "status": "info", 
+            "redirect": f"/payment/{resume.id}"
+        }), 402
         
     else:
-        # Premium User - Check their 100 limit
         daily_downloads = Download.query.filter(
             Download.user_id == current_user.id,
             Download.downloaded_at >= midnight_ist
         ).count()
         if daily_downloads >= 100:
-            flash("You have reached your Pro limit of 100 downloads today.", "danger")
-            return redirect(url_for("dashboard.index"))
+            return jsonify({"message": "Pro limit reached", "status": "danger"}), 403
             
-    # User is premium (or completed a payment flow mock), reconstruct file
     return reconstruct_and_send_pdf(resume)
 
 def reconstruct_and_send_pdf(resume):
-    # Track the download before sending
     new_download = Download(user_id=current_user.id, resume_id=resume.id)
     db.session.add(new_download)
     db.session.commit()
     
     resume_data = json.loads(resume.data)
-    template_name = "template1" # Fallback, ideally saved in DB
+    template_name = resume.template_id or "template1"
     template_file = get_template_file(template_name)
     
     pdf = generate_pdf(resume_data, template_file)
@@ -84,50 +90,32 @@ def reconstruct_and_send_pdf(resume):
         mimetype="application/pdf"
     )
 
-@dashboard_bp.route("/payment/<int:resume_id>")
-@login_required
-def payment(resume_id):
-    resume = Resume.query.get_or_404(resume_id)
-    if resume.user_id != current_user.id:
-        return redirect(url_for("dashboard.index"))
-    return render_template("payment/checkout.html", resume=resume)
-
-@dashboard_bp.route("/verify_payment/<int:resume_id>", methods=["POST"])
+@dashboard_bp.route("/api/verify_payment/<int:resume_id>", methods=["POST"])
 @login_required
 def verify_payment(resume_id):
-    """Mock verification endpoint for the 50 INR payment"""
     resume = Resume.query.get_or_404(resume_id)
     if resume.user_id != current_user.id:
-        return redirect(url_for("dashboard.index"))
+        return jsonify({"message": "Unauthorized"}), 403
     
-    flash("Payment of ₹50 successfully mocked! Your download has started.", "success")
+    # In a real app, verify the payment token here
     return reconstruct_and_send_pdf(resume)
 
-@dashboard_bp.route("/upgrade_pro", methods=["POST"])
+@dashboard_bp.route("/api/upgrade_pro", methods=["POST"])
 @login_required
 def upgrade_pro():
-    """Mock endpoint to grant Pro status for 100k INR"""
     current_user.is_premium = True
     db.session.commit()
-    flash("Congratulations! You are now a Premium Pro member.", "success")
-    return redirect(url_for("dashboard.index"))
+    return jsonify({"message": "Congratulations! You are now a Premium Pro member.", "status": "success"}), 200
 
-@dashboard_bp.route("/upgrade")
-@login_required
-def upgrade():
-    return render_template("auth/upgrade.html")
-
-@dashboard_bp.route("/delete/<int:resume_id>", methods=["POST"])
+@dashboard_bp.route("/api/delete/<int:resume_id>", methods=["DELETE"])
 @login_required
 def delete(resume_id):
     resume = Resume.query.get_or_404(resume_id)
     
     if resume.user_id != current_user.id:
-        flash("You are not authorized to delete this resume.", "danger")
-        return redirect(url_for("dashboard.index"))
+        return jsonify({"message": "You are not authorized to delete this resume.", "status": "danger"}), 403
         
     db.session.delete(resume)
     db.session.commit()
     
-    flash("Resume deleted successfully!", "success")
-    return redirect(url_for("dashboard.index"))
+    return jsonify({"message": "Resume deleted successfully!", "status": "success"}), 200

@@ -4,10 +4,18 @@ from .models import User, Resume
 from .routes.resume_routes import resume_bp
 from .config.config import get_config
 from .extensions import db, login_manager, bcrypt, migrate
+from flask_cors import CORS
 
 def create_app(config_name=None):
     """Application factory"""
     app = Flask(__name__)
+    CORS(app, supports_credentials=True) # Enable CORS with credentials support
+    
+    # Session configuration for cross-origin requests
+    app.config.update(
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SECURE=False, # Set to True in production
+    )
     
     # Load configuration
     if config_name is None:

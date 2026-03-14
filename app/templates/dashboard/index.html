@@ -5,7 +5,7 @@
 {% block content %}
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <h2>Welcome to your Dashboard, {{ current_user.username }}!</h2>
+        <h2 style="color: white;">Welcome to your Dashboard, {{ current_user.username }}!</h2>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -45,7 +45,7 @@
     <!-- DYNAMIC TEMPLATE GALLERY -->
     <div class="template-gallery-section mt-5">
         <h3>📋 Choose a Template</h3>
-        <p class="section-subtitle">Pick a visual style to start your professional journey</p>
+        <p class="section-subtitle" style="color: white; margin-left: 25px; margin-top: -23px;">Pick a visual style to start your professional journey</p>
         <div class="template-scroll-container">
             {% for id, template in templates.items() %}
             <div class="template-tile">
@@ -69,7 +69,7 @@
     </div>
 
     <div class="my-resumes mt-5">
-        <h3>📂 My Saved Resumes</h3>
+        <h3 style="color: white;">📂 My Saved Resumes</h3>
         <div class="dashboard-grid">
             {% for resume in resumes %}
             <div class="resume-card">

@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2>Upload Your Resume</h2>
-    <p class="text-muted">Upload your existing resume (PDF, Word, or Text) to parse and reorder it according to our templates.</p>
+    <h2 style="color: white;">Upload Your Resume</h2>
+    <p class="text-muted" style="color: white;">Upload your existing resume (PDF, Word, or Text) to parse and reorder it according to our templates.</p>
     
     <div class="card p-4 mt-4">
         <form action="{{ url_for('resume.upload') }}" method="post" enctype="multipart/form-data">

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash, session, jsonify
 from flask_login import login_required, current_user
 import json
 from io import BytesIO
@@ -15,13 +15,11 @@ import pytz
 
 resume_bp = Blueprint("resume", __name__)
 
-
 def to_li(items):
     """Convert list of strings into HTML <li> elements with bold formatting before colons"""
     result = []
     for item in items:
         if ':' in item:
-            # Split on first colon and make the part before it bold
             parts = item.split(':', 1)
             formatted_item = f"<li><strong>{parts[0].strip()}:</strong> {parts[1].strip()}</li>"
         else:
@@ -29,188 +27,99 @@ def to_li(items):
         result.append(formatted_item)
     return "".join(result)
 
-
-@resume_bp.route("/", methods=["GET", "POST"])
+@resume_bp.route("/api/resumes", methods=["POST"])
 @login_required
-def index():
-
-    if request.method == "POST":
-        # ---------- MONETIZATION LIMIT CHECK ----------
-        if not current_user.is_premium:
-            # Get IST midnight
-            ist = pytz.timezone('Asia/Kolkata')
-            now_ist = datetime.now(ist)
-            midnight_ist = ist.localize(datetime.combine(now_ist.date(), time.min))
-            
-            # Count resumes generated today
-            daily_generates = Resume.query.filter(
-                Resume.user_id == current_user.id,
-                Resume.created_at >= midnight_ist
-            ).count()
-            
-            if daily_generates >= 10:
-                flash("You have reached your daily limit of 10 free generated resumes. Upgrade to Pro for unlimited generation!", "danger")
-                return redirect(url_for('dashboard.upgrade'))
-                
-        # ---------- EXPERIENCE ----------
-
-        titles = request.form.getlist("exp_title[]")
-        durations = request.form.getlist("exp_duration[]")
-        points = request.form.getlist("exp_points[]")
-
-        experience = []
-
-        for title, duration, point in zip(titles, durations, points):
-
-            if not title.strip() and not duration.strip() and not point.strip():
-                continue
-
-            experience.append({
-                "title": title.strip(),
-                "duration": duration.strip(),
-                "points": parse_bullets(point)
-            })
-
-        # ---------- CUSTOM SECTIONS ----------
-
-        section_titles = request.form.getlist("section_title[]")
-        section_points = request.form.getlist("section_points[]")
-
-        custom_sections = []
-
-        for title, pts in zip(section_titles, section_points):
-
-            if not title.strip() and not pts.strip():
-                continue
-
-            custom_sections.append({
-                "title": title.strip(),
-                "points": parse_bullets(pts)
-            })
-
-        # ---------- PREPARE LIST DATA ----------
-
-        skills_list = parse_bullets(request.form.get("skills", ""))
-        projects_list = parse_bullets(request.form.get("projects", ""))
-        cert_list = parse_bullets(request.form.get("certifications", ""))
-        objective = request.form.get("objective", "").strip()
-        education = request.form.get("education", "").strip()
-
-        # ---------- RESUME DATA ----------
-
-        resume_data = {
-
-            "personal": {
-                "name": request.form.get("name", "").strip(),
-                "address": request.form.get("address", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "email": request.form.get("email", "").strip(),
-                "linkedin": request.form.get("linkedin", "").strip()
-            },
-
-            "objective": objective if objective else None,
-
-            "skills": to_li(skills_list) if skills_list else None,
-
-            "experience": experience if experience else None,
-
-            "projects": to_li(projects_list) if projects_list else None,
-
-            "education": education if education else None,
-
-            "certifications": to_li(cert_list) if cert_list else None,
-
-            "custom_sections": custom_sections if custom_sections else None
-        }
-
-        # ---------- TEMPLATE SWITCHING ----------
-
-        template_name = request.form.get("template", "template1")
-        template_file = get_template_file(template_name)
-
-        # ---------- SAVE TO DB INSTEAD OF DOWNLOAD ----------
+def create_resume():
+    # ---------- MONETIZATION LIMIT CHECK ----------
+    if not current_user.is_premium:
+        ist = pytz.timezone('Asia/Kolkata')
+        now_ist = datetime.now(ist)
+        midnight_ist = ist.localize(datetime.combine(now_ist.date(), time.min))
         
-        # Save resume data as JSON string
-        new_resume = Resume(
-            user_id=current_user.id,
-            title=f"{resume_data['personal']['name']}'s Resume",
-            data=json.dumps(resume_data)
-        )
-        db.session.add(new_resume)
-        db.session.commit()
+        daily_generates = Resume.query.filter(
+            Resume.user_id == current_user.id,
+            Resume.created_at >= midnight_ist
+        ).count()
         
-        flash("Resume successfully generated and saved to your dashboard!", "success")
-        return redirect(url_for('dashboard.index'))
+        if daily_generates >= 10:
+            return jsonify({"message": "Daily limit reached.", "status": "danger"}), 403
 
-    selected_template = request.args.get("template", "template3")
-    return render_template("form.html", selected_template=selected_template)
+    data = request.get_json()
+    
+    # Process data (assuming frontend sends cleaned data or a similar structure)
+    # For now, let's assume the frontend sends the same personal, objective, skills, experience, etc.
+    
+    new_resume = Resume(
+        user_id=current_user.id,
+        title=data.get('title', f"{data.get('personal', {}).get('name', 'My')}'s Resume"),
+        data=json.dumps(data),
+        template_id=data.get('template', 'template1')
+    )
+    db.session.add(new_resume)
+    db.session.commit()
+    
+    return jsonify({
+        "message": "Resume successfully generated and saved!", 
+        "status": "success",
+        "resume_id": new_resume.id
+    }), 201
 
-@resume_bp.route("/ai-create", methods=["GET", "POST"])
-@login_required
-def ai_create():
-    # Pass session data if available (from upload/tailor flows)
-    resume_data = session.pop('ai_resume_data', None)
-    selected_template = session.pop('ai_template', 'template3')
-    return render_template("form.html", ai_enabled=True, resume_data=resume_data, selected_template=selected_template)
-
-@resume_bp.route("/upload", methods=["GET", "POST"])
+@resume_bp.route("/api/upload", methods=["POST"])
 @login_required
 def upload():
-    # Resume upload and parsing
-    if request.method == "POST":
-        file = request.files.get("resume_file")
-        template = request.form.get("template", "template3")
+    file = request.files.get("file")
+    if file and file.filename:
+        content = extract_text_from_file(file)
+        if not content:
+            return jsonify({"message": "Could not extract text.", "status": "danger"}), 400
+            
+        extracted_data = AIService.parse_resume(content)
         
-        if file and file.filename:
-            content = extract_text_from_file(file)
-            if not content:
-                flash("Could not extract text from the uploaded file.", "danger")
-                return redirect(url_for("resume.upload"))
-                
-            extracted_data = AIService.parse_resume(content)
-            
-            if isinstance(extracted_data, dict) and "error" not in extracted_data:
-                session['ai_resume_data'] = extracted_data
-                session['ai_template'] = template
-                flash("Resume successfully parsed! Please review and save.", "success")
-                return redirect(url_for("resume.ai_create"))
-            else:
-                flash(f"AI Parsing Error: {extracted_data.get('error') if isinstance(extracted_data, dict) else extracted_data}", "danger")
-                return redirect(url_for("resume.upload"))
-            
-        flash("No file uploaded.", "danger")
-        return redirect(url_for("resume.upload"))
-    return render_template("resume/upload.html")
+        if isinstance(extracted_data, dict) and "error" not in extracted_data:
+            # Optionally store in session or return for frontend to pre-fill
+            return jsonify({
+                "message": "Resume successfully parsed!", 
+                "status": "success",
+                "extracted_data": extracted_data
+            }), 200
+        else:
+            return jsonify({
+                "message": f"AI Parsing Error: {extracted_data.get('error') if isinstance(extracted_data, dict) else extracted_data}", 
+                "status": "danger"
+            }), 500
+        
+    return jsonify({"message": "No file uploaded.", "status": "danger"}), 400
 
-@resume_bp.route("/tailor", methods=["GET", "POST"])
+@resume_bp.route("/api/tailor", methods=["POST"])
 @login_required
 def tailor():
-    # JD-based tailoring
-    if request.method == "POST":
-        file = request.files.get("resume_file")
-        jd = request.form.get("job_description")
-        template = request.form.get("template", "template3")
+    data = request.get_json()
+    resume_id = data.get("resume_id")
+    jd = data.get("job_description")
+    
+    if resume_id and jd:
+        resume = Resume.query.get_or_404(resume_id)
+        if resume.user_id != current_user.id:
+            return jsonify({"message": "Unauthorized"}), 403
+            
+        # Extract text from existing resume data or stored file
+        # For simplicity, we use the stored JSON data as content or re-parse it
+        content = resume.data 
+        tailored_data = AIService.tailor_resume(content, jd)
         
-        if file and file.filename and jd:
-            content = extract_text_from_file(file)
-            if not content:
-                flash("Could not extract text from the uploaded file.", "danger")
-                return redirect(url_for("resume.tailor"))
-                
-            tailored_data = AIService.tailor_resume(content, jd)
-            
-            if isinstance(tailored_data, dict) and "error" not in tailored_data:
-                session['ai_resume_data'] = tailored_data
-                session['ai_template'] = template
-                flash("Resume successfully tailored! Please review and save.", "success")
-                return redirect(url_for("resume.ai_create"))
-            else:
-                flash(f"AI Tailoring Error: {tailored_data.get('error') if isinstance(tailored_data, dict) else tailored_data}", "danger")
-                return redirect(url_for("resume.tailor"))
-            
-        flash("Please provide both a resume file and a job description.", "danger")
-        return redirect(url_for("resume.tailor"))
-    return render_template("resume/tailor.html")
+        if isinstance(tailored_data, dict) and "error" not in tailored_data:
+            return jsonify({
+                "message": "Resume successfully tailored!", 
+                "status": "success",
+                "tailored_data": tailored_data
+            }), 200
+        else:
+            return jsonify({
+                "message": f"AI Tailoring Error: {tailored_data.get('error') if isinstance(tailored_data, dict) else tailored_data}", 
+                "status": "danger"
+            }), 500
+        
+    return jsonify({"message": "Missing Resume ID or JD.", "status": "danger"}), 400
 
 @resume_bp.route("/api/suggest", methods=["POST"])
 @login_required
@@ -219,4 +128,4 @@ def suggest():
     section = data.get("section")
     context = data.get("context", "")
     suggestion = AIService.get_suggestion(section, context)
-    return {"suggestion": suggestion}
+    return jsonify({"suggestion": suggestion}), 200
