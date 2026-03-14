@@ -111,6 +111,7 @@
   <body>
     <!-- HEADER -->
 
+    {% if personal.name %}
     <h1>{{ personal.name }}</h1>
 
     <hr />
@@ -128,6 +129,7 @@
     </div>
 
     <hr />
+    {% endif %}
 
     <!-- OBJECTIVE -->
 

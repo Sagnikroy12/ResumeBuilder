@@ -28,10 +28,6 @@ const Navbar = () => {
               <LayoutDashboard size={18} />
               <span>Dashboard</span>
             </Link>
-            <Link to="/create" className="nav-link">
-              <FilePlus size={18} />
-              <span>Create Resume</span>
-            </Link>
             {user.is_premium ? (
               <span className="premium-badge">Pro</span>
             ) : (

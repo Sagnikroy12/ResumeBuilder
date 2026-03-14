@@ -184,12 +184,39 @@ class AIService:
     def parse_resume(file_content):
         prompt = f"""
         Act as an ATS parser. Extract key information from the following resume text and return it as a structured JSON object.
-        Fields to extract: name, email, phone, address, objective, skills (comma separated), education (brief), experience (list of objects with title, duration, points).
+        
+        JSON Structure MUST be exactly like this:
+        {{
+            "personal": {{
+                "name": "Full Name",
+                "email": "email@example.com",
+                "phone": "+91 9876543210",
+                "address": "City, Country",
+                "linkedin": "linkedin.com/in/username"
+            }},
+            "objective": "Professional summary...",
+            "skills": "Skill 1\\nSkill 2\\nSkill 3",
+            "education": "Brief education history...",
+            "experience": [
+                {{
+                    "title": "Job Title",
+                    "duration": "Jan 2020 - Present",
+                    "points": "Point 1\\nPoint 2"
+                }}
+            ],
+            "projects": "Project 1\\nProject 2",
+            "certifications": "Cert 1\\nCert 2"
+        }}
+        
+        Important:
+        - Return 'skills', 'projects', and 'certifications' as multiline strings (each item on a new line).
+        - 'experience' list items should have 'points' as a multiline string.
+        - Normalize the metadata into the 'personal' object.
         
         Resume Text:
         {file_content}
         
-        Return ONLY the raw JSON object.
+        Return ONLY the raw JSON object. No other text.
         """
         return AIService._execute_with_fallback(prompt, is_json=True)
 
@@ -197,9 +224,29 @@ class AIService:
     def tailor_resume(file_content, job_description):
         prompt = f"""
         Act as an expert career coach. Tailor the following resume to better match the job description provided.
-        Extract key information and return it as a structured JSON object.
+        Extract and adapt information into this structured JSON object:
         
-        Fields to extract: name, email, phone, address, objective, skills (comma separated), education (brief), experience (list of objects with title, duration, points).
+        {{
+            "personal": {{
+                "name": "Full Name",
+                "email": "email@example.com",
+                "phone": "+91 9876543210",
+                "address": "City, Country",
+                "linkedin": "linkedin.com/in/username"
+            }},
+            "objective": "Tailored summary...",
+            "skills": "Tailored Skill 1\\nTailored Skill 2",
+            "education": "Brief education history...",
+            "experience": [
+                {{
+                    "title": "Job Title",
+                    "duration": "Jan 2020 - Present",
+                    "points": "Tailored Point 1\\nTailored Point 2"
+                }}
+            ],
+            "projects": "Tailored Project 1",
+            "certifications": "Certs..."
+        }}
         
         Resume:
         {file_content}

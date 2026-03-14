@@ -1,8 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
-import { FileText, Download, Trash2, Plus, Sparkles, Wand2, Upload, Target } from 'lucide-react';
+import { FileText, Download, Trash2, Plus, Sparkles, Wand2, Upload, Target, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const ResumeMiniPreview = ({ resumeData }) => {
+  const [html, setHtml] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMini = async () => {
+      try {
+        const response = await api.post('/api/preview', resumeData);
+        setHtml(response.data.html);
+      } catch (err) {
+        setHtml('<p>Preview failed</p>');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMini();
+  }, [resumeData]);
+
+  if (loading) return <div className="mini-preview-loading"><Loader2 className="animate-spin" size={24} /></div>;
+
+  return (
+    <div className="mini-preview-scaler">
+       <iframe title="mini-preview" srcDoc={html} className="mini-preview-iframe" />
+    </div>
+  );
+};
 
 const DashboardPage = () => {
   const [resumes, setResumes] = useState([]);
@@ -17,7 +44,12 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       const response = await api.get('/api/dashboard');
-      setResumes(response.data.resumes);
+      // Ensure resume.data is parsed if it's a string
+      const processedResumes = response.data.resumes.map(r => ({
+        ...r,
+        data: typeof r.data === 'string' ? JSON.parse(r.data) : r.data
+      }));
+      setResumes(processedResumes);
       setTemplates(response.data.templates);
     } catch (err) {
       setError('Failed to load dashboard data');
@@ -128,22 +160,32 @@ const DashboardPage = () => {
             <div className="resumes-grid">
               {resumes.map(resume => (
                 <div key={resume.id} className="resume-card glass">
-                  <div className="resume-card-header">
-                    <h3>{resume.title}</h3>
-                    <button onClick={() => handleDelete(resume.id)} className="delete-btn">
-                      <Trash2 size={18} />
-                    </button>
+                  <div className="resume-visual-preview">
+                    <ResumeMiniPreview resumeData={resume.data} />
+                    <div className="preview-overlay">
+                      <Link to={`/create?resume_id=${resume.id}`} className="edit-overlay-btn">
+                        <FileText size={16} /> Edit
+                      </Link>
+                    </div>
                   </div>
-                  <div className="resume-card-body">
-                    <p>Created: {new Date(resume.created_at).toLocaleDateString()}</p>
-                    <div className="resume-actions">
-                      <button 
-                        onClick={() => handleDownload(resume.id, resume.title)}
-                        className="download-btn"
-                      >
-                        <Download size={18} />
-                        <span>Download PDF</span>
+                  <div className="resume-card-details">
+                    <div className="resume-card-header">
+                      <h3>{resume.title}</h3>
+                      <button onClick={() => handleDelete(resume.id)} className="delete-btn" title="Delete Resume">
+                        <Trash2 size={16} />
                       </button>
+                    </div>
+                    <div className="resume-card-body">
+                      <p className="created-date">Created: {new Date(resume.created_at).toLocaleDateString()}</p>
+                      <div className="resume-actions">
+                        <button 
+                          onClick={() => handleDownload(resume.id, resume.title)}
+                          className="download-btn-compact"
+                        >
+                          <Download size={16} />
+                          <span>PDF</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

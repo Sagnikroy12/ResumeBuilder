@@ -7,7 +7,23 @@ import { CreditCard, Lock, ShieldCheck, Loader2 } from 'lucide-react';
 const PaymentPage = () => {
   const { resumeId } = useParams();
   const [loading, setLoading] = useState(false);
+  const [resume, setResume] = useState(null);
+  const [pageLoading, setPageLoading] = useState(true);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const fetchResume = async () => {
+      try {
+        const response = await api.get(`/api/resumes/${resumeId}`);
+        setResume(response.data);
+      } catch (err) {
+        console.error('Failed to fetch resume details');
+      } finally {
+        setPageLoading(false);
+      }
+    };
+    fetchResume();
+  }, [resumeId]);
 
   const handlePayment = async () => {
     setLoading(true);
@@ -29,6 +45,10 @@ const PaymentPage = () => {
     }
   };
 
+  if (pageLoading) return <div className="loading-screen">Preparing payment...</div>;
+
+  const price = resume?.used_ai ? 100 : 50;
+
   return (
     <div className="payment-page">
       <Navbar />
@@ -44,12 +64,12 @@ const PaymentPage = () => {
 
           <div className="order-summary">
             <div className="summary-row">
-              <span>Premium Resume Download</span>
-              <span className="price">₹50.00</span>
+              <span>Premium Resume Download {resume?.used_ai && "(AI Enhanced)"}</span>
+              <span className="price">₹{price}.00</span>
             </div>
             <div className="summary-total">
               <span>Total Amount</span>
-              <span>₹50.00</span>
+              <span>₹{price}.00</span>
             </div>
           </div>
 
@@ -60,7 +80,7 @@ const PaymentPage = () => {
             </div>
             
             <button onClick={handlePayment} className="pay-btn" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : 'Pay ₹50 & Download'}
+              {loading ? <Loader2 className="animate-spin" /> : `Pay ₹${price} & Download`}
             </button>
           </div>
 

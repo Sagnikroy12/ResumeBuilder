@@ -27,6 +27,53 @@ def to_li(items):
         result.append(formatted_item)
     return "".join(result)
 
+
+def _normalize_resume_data(data):
+    """Normalize resume data for rendering and storage.
+
+    This ensures that template expects lists (for bullets) and safe HTML is provided where needed.
+    """
+    if not isinstance(data, dict):
+        return {}
+
+    data = data.copy()
+
+    # Normalize list fields
+    for field in ("skills", "projects", "certifications"):
+        value = data.get(field, "")
+        if isinstance(value, str):
+            bullets = parse_bullets(value)
+            data[field] = to_li(bullets)
+
+    # Normalize experience entries
+    experience = data.get("experience", [])
+    if isinstance(experience, list):
+        normalized_exp = []
+        for exp in experience:
+            if not isinstance(exp, dict):
+                continue
+            points = exp.get("points", "")
+            if isinstance(points, str):
+                exp["points"] = parse_bullets(points)
+            normalized_exp.append(exp)
+        data["experience"] = normalized_exp
+    else:
+        data["experience"] = []
+
+    # Normalize custom sections
+    custom_sections = data.get("custom_sections", [])
+    if isinstance(custom_sections, list):
+        for section in custom_sections:
+            if isinstance(section, dict):
+                points = section.get("points", "")
+                if isinstance(points, str):
+                    section["points"] = parse_bullets(points)
+    else:
+        data["custom_sections"] = []
+
+    return data
+
+
 @resume_bp.route("/api/resumes", methods=["POST"])
 @login_required
 def create_resume():
@@ -44,16 +91,17 @@ def create_resume():
         if daily_generates >= 10:
             return jsonify({"message": "Daily limit reached.", "status": "danger"}), 403
 
-    data = request.get_json()
-    
-    # Process data (assuming frontend sends cleaned data or a similar structure)
-    # For now, let's assume the frontend sends the same personal, objective, skills, experience, etc.
-    
+    data = request.get_json() or {}
+
+    # Normalize data so templates get the formats they expect (lists for bullets, HTML list items, etc.)
+    normalized_data = _normalize_resume_data(data)
+
     new_resume = Resume(
         user_id=current_user.id,
-        title=data.get('title', f"{data.get('personal', {}).get('name', 'My')}'s Resume"),
-        data=json.dumps(data),
-        template_id=data.get('template', 'template1')
+        title=normalized_data.get('title', f"{normalized_data.get('personal', {}).get('name', 'My')}'s Resume"),
+        data=json.dumps(normalized_data),
+        template_id=normalized_data.get('template', 'template1'),
+        used_ai=data.get('usedAi', False)
     )
     db.session.add(new_resume)
     db.session.commit()
@@ -63,6 +111,34 @@ def create_resume():
         "status": "success",
         "resume_id": new_resume.id
     }), 201
+
+
+@resume_bp.route("/api/preview", methods=["POST"])
+@login_required
+def preview_resume():
+    """Render a live preview of the resume based on current form data."""
+    data = request.get_json() or {}
+    normalized_data = _normalize_resume_data(data)
+    template_file = get_template_file(normalized_data.get("template", "template1"))
+
+    html = render_template(template_file, **normalized_data)
+    return jsonify({"html": html}), 200
+
+@resume_bp.route("/api/resumes/<int:resume_id>", methods=["GET"])
+@login_required
+def get_resume(resume_id):
+    resume = Resume.query.get_or_404(resume_id)
+    if resume.user_id != current_user.id:
+        return jsonify({"message": "Unauthorized"}), 403
+    
+    return jsonify({
+        "id": resume.id,
+        "title": resume.title,
+        "data": json.loads(resume.data),
+        "template_id": resume.template_id,
+        "used_ai": resume.used_ai
+    }), 200
+
 
 @resume_bp.route("/api/upload", methods=["POST"])
 @login_required
@@ -128,4 +204,4 @@ def suggest():
     section = data.get("section")
     context = data.get("context", "")
     suggestion = AIService.get_suggestion(section, context)
-    return jsonify({"suggestion": suggestion}), 200
+    return jsonify({"suggestion": suggestion}), 200

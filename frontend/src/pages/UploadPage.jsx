@@ -33,7 +33,12 @@ const UploadPage = () => {
       });
       // Assuming backup or data is returned to pre-fill builder
       alert('Resume parsed successfully! Redirecting to editor...');
-      navigate('/create');
+      navigate('/create?ai=true', { 
+        state: { 
+          resumeData: response.data.extracted_data,
+          usedAi: true 
+        } 
+      });
     } catch (err) {
       setError(err.response?.data?.error || 'Upload failed');
     } finally {

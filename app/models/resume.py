@@ -8,6 +8,8 @@ class Resume(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False, default="My Resume")
     data = db.Column(db.Text, nullable=False) # Store resume JSON data
+    template_id = db.Column(db.String(50), nullable=False, default="template1")
+    used_ai = db.Column(db.Boolean, default=False)
     file_path = db.Column(db.String(255), nullable=True) # Path if physical file generated
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
