@@ -10,7 +10,7 @@ TEMPLATES = {
     "template1": {
         "name": "Classic",
         "file": "resume_template.html",
-        "description": "Centered elegant layout with symmetric headers and 2-column skills section. Professional Times New Roman aesthetic.",
+        "description": "Centered elegant layout with symmetric headers and skills section. Professional Times New Roman aesthetic.",
         "thumbnail": "img/templates/classic.png"
     },
     "template2": {
