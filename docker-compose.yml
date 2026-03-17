@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/app
       - uploads:/app/uploads
-    command: flask run --host=0.0.0.0
+    # command: flask run --host=0.0.0.0
     networks:
       - resume_network
     healthcheck:
