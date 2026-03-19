@@ -10,7 +10,6 @@ from app.services.pdf_service import generate_pdf
 from app.config.templates_config import get_template_file, get_all_templates
 from datetime import datetime, time
 import pytz
-
 dashboard_bp = Blueprint("dashboard", __name__)
 
 MASTER_EMAIL = "sagnikruproy11@gmail.com"
@@ -28,6 +27,7 @@ def toggle_premium():
     status = "Pro" if current_user.is_premium else "Free"
     flash(f"Account toggled to {status}!", "info")
     return redirect(url_for('dashboard.index'))
+
 
 @dashboard_bp.route("/")
 @login_required
@@ -48,7 +48,8 @@ def index_data():
         "id": r.id,
         "title": r.title,
         "created_at": r.created_at.isoformat(),
-        "template": r.template_id
+        "template": r.template_id,
+        "data": json.loads(r.data)
     } for r in resumes]
     
     return jsonify({

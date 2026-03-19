@@ -56,3 +56,20 @@ def get_current_user():
             "user": {"id": current_user.id, "username": current_user.username, "email": current_user.email, "is_premium": current_user.is_premium}
         }), 200
     return jsonify({"user": None}), 200
+
+@auth_bp.route('/toggle-premium', methods=['POST'])
+@login_required
+def toggle_premium():
+    """Toggle Pro status for master user."""
+    MASTER_EMAIL = "sagnikruproy11@gmail.com"
+    if current_user.email != MASTER_EMAIL:
+        return jsonify({"message": "Unauthorized"}), 403
+    
+    current_user.is_premium = not current_user.is_premium
+    db.session.commit()
+    
+    status = "Pro" if current_user.is_premium else "Free"
+    return jsonify({
+        "message": f"Account toggled to {status}!", 
+        "is_premium": current_user.is_premium
+    }), 200
