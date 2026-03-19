@@ -4,8 +4,18 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <div class="dashboard-header">
+    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="color: white;">Welcome to your Dashboard, {{ current_user.username }}!</h2>
+        
+        {% if current_user.email == "sagnikruproy11@gmail.com" %}
+        <div class="master-tools">
+            <form action="{{ url_for('dashboard.toggle_premium') }}" method="POST">
+                <button type="submit" class="btn" style="background-color: {{ '#f39c12' if not current_user.is_premium else '#34495e' }}; color: white; border: 2px solid white;">
+                    {{ "🔓 Switch to Pro" if not current_user.is_premium else "🔒 Switch to Free" }}
+                </button>
+            </form>
+        </div>
+        {% endif %}
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -73,6 +83,13 @@
         <div class="dashboard-grid">
             {% for resume in resumes %}
             <div class="resume-card">
+                <div class="resume-preview-container">
+                    <div class="preview-loading">Rendering...</div>
+                    <iframe src="{{ url_for('resume.render_view', resume_id=resume.id) }}" class="resume-mini-preview" onload="this.previousElementSibling.style.display='none'"></iframe>
+                    <div class="preview-overlay">
+                        <a href="{{ url_for('resume.index', id=resume.id) }}" class="btn-edit-overlay">✍️ Edit</a>
+                    </div>
+                </div>
                 <div class="resume-card-header">
                     <h3>{{ resume.title }}</h3>
                     <form action="{{ url_for('dashboard.delete', resume_id=resume.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this resume?');">
@@ -169,7 +186,62 @@
 .resume-card-header {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
+}
+
+.resume-preview-container {
+    position: relative;
+    height: 200px;
+    background: white;
+    border-bottom: 1px solid #eee;
+    overflow: hidden;
+}
+
+.resume-mini-preview {
+    width: 100%;
+    height: 100%;
+    border: none;
+    pointer-events: none;
+    transform: scale(0.4);
+    transform-origin: top left;
+    width: 250%; /* Adjust for scale */
+    height: 250%;
+}
+
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.resume-preview-container:hover .preview-overlay {
+    opacity: 1;
+}
+
+.preview-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #95a5a6;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.btn-edit-overlay {
+    background: white;
+    color: #2c3e50;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 700;
 }
 .resume-card-header h3 {
     margin: 0;

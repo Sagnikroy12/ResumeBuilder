@@ -124,7 +124,7 @@ class AIService:
 
     @staticmethod
     def _execute_with_fallback(prompt, is_json=False):
-        """Sequential fallback: Gemini -> Groq -> Cerebras -> SambaNova -> OpenAI -> Anthropic -> DeepSeek"""
+        """Sequential fallback: Gemini -> SambaNova -> Groq -> Cerebras -> OpenAI -> Anthropic -> DeepSeek"""
         providers = [
             ('GEMINI', AIService._call_gemini),
             ('SAMBANOVA', AIService._call_sambanova),
@@ -147,7 +147,7 @@ class AIService:
                         # Basic JSON extraction
                         clean_json = result.replace('```json', '').replace('```', '').strip()
                         parsed_json = json.loads(clean_json)
-                        print(f"[{name} PARSED JSON:]\n{json.dumps(parsed_json, indent=2)}\n" + "="*50)
+                        print(f"[{name} PARSED JSON successfully]")
                         return parsed_json
                     return result
                 else:
@@ -175,187 +175,174 @@ class AIService:
         return f"AI Error: All available providers exhausted. Details: {error_summary}"
 
     @staticmethod
-    def _encode_context(text_or_dict):
-        """
-        Compresses and encrypts context. If it's a JSON string or dict, 
-        it selectively avoids encrypting personal info and titles to prevent hallucination.
-        """
-        if not text_or_dict:
-            return "", ""
-            
-        import re
-        import json
-        
-        vowel_map = {'a': '1', 'e': '2', 'i': '3', 'o': '4', 'u': '5',
-                     'A': '1', 'E': '2', 'I': '3', 'O': '4', 'U': '5'}
-        
-        def encode_str(s):
-            if not isinstance(s, str):
-                return s
-            compressed = re.sub(r'\s+', ' ', s).strip()
-            return "".join(vowel_map.get(c, c) for c in compressed)
+    def _encode_context(data):
+        """Uses ResumeEncoder for lossless encoding/placeholder substitution."""
+        from app.utils.encoder import ResumeEncoder
+        return ResumeEncoder.encode(data)
 
-        data = text_or_dict
-        if isinstance(data, str):
-            try:
-                data = json.loads(data)
-            except:
-                pass # Not JSON, just encode the whole string
-                
-        if isinstance(data, dict):
-            # It's a structured resume, let's selectively encode
-            encoded_dict = {}
-            for k, v in data.items():
-                if k == 'personal':
-                    encoded_dict[k] = v # Do not encode personal info
-                elif k == 'experience' and isinstance(v, list):
-                    encoded_dict[k] = []
-                    for exp in v:
-                        if isinstance(exp, dict):
-                            new_exp = exp.copy()
-                            if 'points' in new_exp:
-                                new_exp['points'] = encode_str(new_exp['points'])
-                            encoded_dict[k].append(new_exp)
-                elif k in ['objective', 'skills', 'projects', 'certifications', 'education']:
-                    if isinstance(v, list):
-                        encoded_dict[k] = [encode_str(item.get('points', '')) if isinstance(item, dict) else encode_str(item) for item in v]
-                    else:
-                        encoded_dict[k] = encode_str(v)
-                else:
-                    encoded_dict[k] = v
-                    
-            instructions = (
-                "DECRYPTION INSTRUCTIONS:\n"
-                "The text is a JSON object where ONLY specific fields like 'objective', 'skills', 'projects', and 'points' "
-                "are compressed and encrypted using a Vowel-Number cipher (1=a/A, 2=e/E, 3=i/I, 4=o/O, 5=u/U).\n"
-                "Personal details, Names, Contacts, Job titles, Companies, and Durations remain UNENCRYPTED in plain text.\n"
-                "Read and decrypt the encrypted fields carefully before performing any extraction or tailoring."
-            )
-            return json.dumps(encoded_dict, indent=2), instructions
-
-        # Fallback to full string encoding (for raw PDF text)
-        encoded = encode_str(text_or_dict)
-        instructions = (
-            "DECRYPTION INSTRUCTIONS:\n"
-            "The context provided is compressed (extra spaces removed) and encrypted using a Vowel-Number cipher.\n"
-            "To decrypt, replace numbers back to vowels: 1=a/A, 2=e/E, 3=i/I, 4=o/O, 5=u/U.\n"
-            "Read and decrypt the context carefully before performing any extraction or tailoring."
-        )
-        return encoded, instructions
+    @staticmethod
+    def _decode_response(response, metadata, is_json=False):
+        """Decodes the AI response using the mapping metadata."""
+        from app.utils.encoder import ResumeEncoder
+        print(f"[AIService] Decoding response (is_json={is_json})")
+        
+        if is_json and isinstance(response, (dict, list)):
+            decoded = ResumeEncoder.decode_json(response, metadata)
+            return decoded
+        
+        decoded = ResumeEncoder.decode(response, metadata)
+        return decoded
 
     @staticmethod
     def get_suggestion(section, context=""):
         prompt = f"Act as a professional resume writer. Provide high-quality, ATS-friendly content for the '{section}' section of a resume. "
         if context:
-            encoded_context, decode_instructions = AIService._encode_context(context)
-            prompt += f"{decode_instructions}\nEncoded Context: '{encoded_context}'.\n\nPlease enhance and expand upon the decoded context to make it professional and impactful. "
+            encoded_context, metadata = AIService._encode_context(context)
+            prompt += (
+                "\nINSTRUCTIONS:\n"
+                "1. The following context uses placeholders like __NAME_0__ and @-codes for sensitive info.\n"
+                "2. You MUST REUSE these exact placeholders and mappings in your response. DO NOT attempt to invent real data for them.\n"
+                "3. If providing @SK (Skills), group them into logical categories (e.g. 'Languages: Java, Python\\nTools: Git, Docker').\n"
+                f"Encoded Context: '{encoded_context}'\n\n"
+                "Please enhance and expand upon this content to make it professional and impactful. "
+            )
         else:
             prompt += "Provide a general professional example. "
-        prompt += "Return ONLY the suggested content text, no preamble, no quotes, and no extra formatting."
-        return AIService._execute_with_fallback(prompt)
+        
+        prompt += (
+            "\nFINAL RULES:\n"
+            "- Return ONLY the suggested content text.\n"
+            "- NO preamble, NO prefixes like 'Skill:' or 'Summary:', and NO empty lines.\n"
+            "- All text must be in plain English except for placeholders/codes."
+        )
+        
+        raw_response = AIService._execute_with_fallback(prompt)
+        if context:
+            # Ensure we use the exact same mapping from metadata
+            return AIService._decode_response(raw_response.strip(), metadata)
+        return raw_response
 
     @staticmethod
     def parse_resume(file_content):
-        encoded_content, decode_instructions = AIService._encode_context(file_content)
+        encoded_content, metadata = AIService._encode_context(file_content)
+        
         prompt = f"""
-        Act as an ATS parser. Extract key information from the following resume text and return it as a structured JSON object.
+        Act as an ATS parser. Extract key information from the following encoded resume text and return it as a structured JSON object.
         
-        {decode_instructions}
+        STRICT FORMATTING RULES:
+        1. REUSE any placeholders (__NAME_0__, __EMAIL_0__, etc.) and keyword codes (@EX, @SK, etc.) you find in the encoded text.
+        2. GLOSSARY: __NAME_x__ is Name, __EMAIL_x__ is Email, etc.
+        3. EXTRACT the FULL summary/objective. DO NOT truncate or omit any sentences. Every detail matters.
+        4. DO NOT combine placeholders. If you see "__NAME_0__, Kolkata", the name is "__NAME_0__" and the address is "Kolkata".
+        5. DO NOT add prefixes like 'Skill:' inside the fields.
+        6. DO NOT output empty bullet points.
+        7. For 'skills', group them into logical categories (e.g. 'Languages: Python, Java').
         
-        CRITICAL INSTRUCTIONS for parsing:
-        1. All output MUST be in plain English. DO NOT output any encrypted text.
-        2. Extract the candidate's Name, Email, or LinkedIn URL from the DECRYPTED text exactly as they appear.
-        3. Extract Job Titles, Company Names, Locations, and Durations from the DECRYPTED text.
-        4. For 'skills', group them into logical categories (e.g., 'Automation & Testing', 'Languages', 'DevOps & Tools', 'Methodologies'). Format each category on a new line as 'Category: Skill 1, Skill 2'. Do NOT use a single long list of bullet points.
-        
-        JSON Structure MUST be exactly like this:
+        JSON STRUCTURE TEMPLATE:
         {{
             "personal": {{
-                "name": "Full Name",
-                "email": "email@example.com",
-                "phone": "+91 9876543210",
-                "address": "City, Country",
-                "linkedin": "linkedin.com/in/username"
+                "name": "Extracted Name",
+                "email": "Extracted Email",
+                "phone": "Extracted Phone",
+                "address": "Extracted Address",
+                "linkedin": "Extracted LinkedIn"
             }},
-            "objective": "Professional summary...",
-            "skills": "Category 1: Skill A, Skill B\\nCategory 2: Skill C, Skill D",
-            "education": "Brief education history...",
+            "objective": "A full, detailed summary capturing all years of experience and core expertise...",
+            "skills": "Frontend: React, Vue\\nTools: Docker, Git",
+            "education": "Degree, University",
             "experience": [
                 {{
                     "title": "Job Title",
-                    "duration": "Jan 2020 - Present",
+                    "duration": "Dates",
                     "points": "Point 1\\nPoint 2"
                 }}
             ],
-            "projects": "Project 1: Point 1\\nProject 2: Point 2",
+            "projects":[
+                {{
+                    "title": "Project Name",
+                    "points": "Feature 1\\nFeature 2"
+                }}
+            ],
             "certifications": "Cert 1\\nCert 2"
         }}
-        
-        Important:
-        - Return 'skills', 'projects', and 'certifications' ONLY as multiline strings (a single string with \\n separators format). DO NOT return arrays for these.
-        - 'experience' MUST be an array of objects.
-        - Normalize the metadata into the 'personal' object.
         
         Encoded Resume Text:
         {encoded_content}
         
-        Return ONLY the raw JSON object. No other text.
+        Return ONLY the raw JSON object. No preamble or markdown code blocks.
         """
-        return AIService._execute_with_fallback(prompt, is_json=True)
+        raw_json = AIService._execute_with_fallback(prompt, is_json=True)
+        return AIService._decode_response(raw_json, metadata, is_json=True)
 
     @staticmethod
     def tailor_resume(file_content, job_description):
-        encoded_resume, resume_instructions = AIService._encode_context(file_content)
-        encoded_jd, _ = AIService._encode_context(job_description)
+        from app.utils.encoder import ResumeEncoder
+        state = {"p_count": 0, "placeholders": {}}
         
+        # If file_content is a JSON string (from DB), parse it first so we encode the DICT
+        resume_data = file_content
+        if isinstance(file_content, str):
+            try:
+                resume_data = json.loads(file_content)
+                print("[AIService] Parsed resume JSON string for tailoring")
+            except:
+                pass
+                
+        encoded_resume_obj, resume_metadata = ResumeEncoder.encode(resume_data, state=state)
+        # Convert back to JSON string for the prompt if it was a dict
+        encoded_resume = json.dumps(encoded_resume_obj, indent=2) if isinstance(encoded_resume_obj, (dict, list)) else encoded_resume_obj
+
+        encoded_jd, jd_metadata = ResumeEncoder.encode(job_description, state=state)
+        
+        # Combined metadata uses the same global placeholder map
+        combined_metadata = {"placeholders": state["placeholders"]}
+
         prompt = f"""
-        Act as an expert career coach. Your task is to aggressively TAILOR the following resume to perfectly match the provided job description.
-        You must highlight relevant skills, adjust the objective, and rewrite experience points to align with the job requirements.
+        Act as an expert career coach. Your task is to TAILOR the resume to perfectly match the job description.
         
-        {resume_instructions}
+        STRICT FORMATTING RULES:
+        1. REUSE placeholders and @-codes.
+        2. EXTRACT the FULL tailored summary. DO NOT truncate. Keep every detail.
+        3. CRITICAL: If you see "__NAME_0__, City", DO NOT put both in address. Split them.
+        4. DO NOT add prefix labels like 'Tailored Skill:'.
+        5. DO NOT output empty bullet points.
+        6. For 'skills', group them into logical categories.
         
-        CRITICAL INSTRUCTIONS for tailoring:
-        0. ALL output in the JSON MUST be plain English. NEVER output encrypted/vowel-replaced strings. Decrypt everything first.
-        1. Keep the candidate's DECRYPTED Name, Email, Phone, Address, and LinkedIn EXACTLY the same as in the original DECRYPTED resume.
-        2. Keep the DECRYPTED Job Titles, Company Names, Locations, and Durations under experience. ONLY rewrite the bullet points ("points").
-        3. Keep the DECRYPTED Education history. ONLY rewrite Project and Experience bullet points.
-        4. For 'skills', group them into logical categories (e.g., 'Automation & Testing', 'Languages', 'DevOps & Tools', 'Methodologies'). Format each category on a new line as 'Category: Skill 1, Skill 2'. Do NOT use a single long list of bullet points.
-        5. Ensure the tailored content is short, concise, and punchy for quick attraction. Maintain a professional tone while being impactful.
-        
-        Extract and adapt information into this EXACT structured JSON object:
-        
+        JSON STRUCTURE TEMPLATE:
         {{
             "personal": {{
-                "name": "Full Name",
-                "email": "email@example.com",
-                "phone": "+91 9876543210",
-                "address": "City, Country",
-                "linkedin": "linkedin.com/in/username"
+                "name": "Name from input",
+                "email": "Email from input",
+                "phone": "Phone from input",
+                "address": "Address from input",
+                "linkedin": "LinkedIn from input"
             }},
-            "objective": "A highly tailored professional summary matching the JD...",
-            "skills": "Category 1: Skill A, Skill B\\nCategory 2: Skill C, Skill D",
-            "education": "Brief education history...",
+            "objective": "A full, tailored professional summary capturing the SDET/Engineer experience in detail...",
+            "skills": "Category title: Skill 1, Skill 2\\nNext Category: Skill 3",
+            "education": "Education details...",
             "experience": [
                 {{
                     "title": "Job Title",
-                    "duration": "Jan 2020 - Present",
-                    "points": "Tailored Point 1\\nTailored Point 2\\n(Rewrite to match JD)"
+                    "duration": "Dates",
+                    "points": "Punchy tailored point 1\\nPunchy tailored point 2"
                 }}
             ],
-            "projects": "Tailored Project 1: Point 1\\nTailored Project 2",
-            "certifications": "Cert 1\\nCert 2"
+            "projects": [
+                {{
+                    "title": "Project Name",
+                    "points": "Relevant feature 1\\nRelevant feature 2"
+                }}
+            ],
+            "certifications": "Relevant Certs"
         }}
         
-        Important:
-        - Return 'skills', 'projects', and 'certifications' ONLY as multiline strings (a single string with \\n separators format). DO NOT return arrays for these.
-        - 'experience' MUST be an array of objects.
-        
-        Encoded Resume Text:
+        Encoded Resume:
         {encoded_resume}
         
         Encoded Job Description:
         {encoded_jd}
         
-        Return ONLY the raw JSON object. No other text.
+        Return ONLY the raw JSON object. No preamble or markdown blocks.
         """
-        return AIService._execute_with_fallback(prompt, is_json=True)
+        raw_json = AIService._execute_with_fallback(prompt, is_json=True)
+        return AIService._decode_response(raw_json, combined_metadata, is_json=True)

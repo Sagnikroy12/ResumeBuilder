@@ -63,4 +63,20 @@ def create_app(config_name=None):
     def request_entity_too_large(error):
         return {"error": "File too large"}, 413
     
+    # Custom Jinja Filters
+    from .services.resume_service import ResumeService
+    from .utils.text_utils import parse_bullets
+
+    @app.template_filter('format_bullets')
+    def format_bullets_filter(value):
+        if not value:
+            return ""
+        if isinstance(value, str):
+            bullets = parse_bullets(value)
+        elif isinstance(value, list):
+            bullets = value
+        else:
+            bullets = [str(value)]
+        return ResumeService.to_li(bullets)
+    
     return app

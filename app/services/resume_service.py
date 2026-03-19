@@ -32,8 +32,9 @@ class ResumeService:
         for field in ("skills", "projects", "certifications"):
             value = data.get(field, "")
             if isinstance(value, str):
+                # Keep as raw string for the editor, but clean it up
                 bullets = parse_bullets(value)
-                data[field] = ResumeService.to_li(bullets)
+                data[field] = "\n".join(bullets)
 
         # Normalize experience entries
         experience = data.get("experience", [])
@@ -85,14 +86,52 @@ class ResumeService:
 
     @staticmethod
     def create_resume(user_id, raw_data):
-        """Process and save a new resume."""
+        """Process and save/update a resume with versioning logic."""
         normalized_data = ResumeService.normalize_resume_data(raw_data)
+        resume_id = raw_data.get('id') or raw_data.get('resume_id')
         
+        # Strip meta fields from comparison to ensure bit-perfect content check
+        comparison_data = normalized_data.copy()
+        for k in ('id', 'resume_id', 'template', 'title', 'usedAi'):
+            comparison_data.pop(k, None)
+            
+        new_data_json = json.dumps(comparison_data, sort_keys=True)
+        new_template = normalized_data.get('template', raw_data.get('template', 'template1'))
+        new_title = normalized_data.get('title', raw_data.get('title', f"{normalized_data.get('personal', {}).get('name', 'My')}'s Resume"))
+
+        current_app.logger.info(f"--- Smart Save Check (User: {user_id}, ID: {resume_id}) ---")
+        
+        if resume_id:
+            existing = Resume.query.filter_by(id=resume_id, user_id=user_id).first()
+            if existing:
+                existing_data = json.loads(existing.data)
+                # Strip EVERYTHING that is stored in separate columns from the comparison
+                for k in ('id', 'resume_id', 'template', 'title', 'usedAi'):
+                    existing_data.pop(k, None)
+                    
+                existing_data_json = json.dumps(existing_data, sort_keys=True)
+                
+                # Check for absolute equality in content AND template AND title
+                is_same_content = (existing_data_json == new_data_json)
+                is_same_template = (existing.template_id == new_template)
+                is_same_title = (existing.title == new_title)
+
+                if is_same_content and is_same_template and is_same_title:
+                    current_app.logger.info("NO CHANGES DETECTED. Overwriting existing resume.")
+                    existing.used_ai = existing.used_ai or raw_data.get('usedAi', False)
+                    db.session.commit()
+                    return existing
+                else:
+                    current_app.logger.info(f"CHANGES DETECTED. Content: {is_same_content}, Template: {is_same_template}, Title: {is_same_title}. Creating NEW version.")
+            else:
+                current_app.logger.warning(f"Resume ID {resume_id} provided but not found for user {user_id}. Creating new.")
+
+        # Create new record
         new_resume = Resume(
             user_id=user_id,
-            title=normalized_data.get('title', f"{normalized_data.get('personal', {}).get('name', 'My')}'s Resume"),
-            data=json.dumps(normalized_data),
-            template_id=normalized_data.get('template', 'template1'),
+            title=new_title,
+            data=new_data_json,
+            template_id=new_template,
             used_ai=raw_data.get('usedAi', False)
         )
         

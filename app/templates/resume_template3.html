@@ -14,61 +14,72 @@
       }
       body {
         font-family: 'Times New Roman', Times, serif;
-        margin: 0.5in;
         color: #222;
-        line-height: 1.35;
-        font-size: 15px;
+        line-height: 1.3;
+        font-size: 13px;
+        letter-spacing: 0.5px;
         background: white;
+      }
+      
+      @media screen {
+        body { padding: 0.5in; }
+      }
+      @media print {
+        body { margin: 0; padding: 0; }
       }
 
       /* HEADER */
 
       .header {
-        margin-bottom: 18px;
+        margin-bottom: 12px;
       }
 
       .name {
-        font-size: 30px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        line-height: 1.05;
       }
 
       .contact {
-        font-size: 13px;
-        color: #444;
-        margin-top: 4px;
+        font-size: 12px;
+        color: #222;
+        margin-top: 5px;
+        font-weight: 600;
       }
 
       /* SECTION */
 
       .section {
-        margin-top: 18px;
+        margin-top: 14px;
       }
 
       .section-title {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 700;
-        border-bottom: 1px solid #000;
-        margin-bottom: 6px;
+        border-bottom: 1.5px solid #000;
+        margin-bottom: 5px;
         padding-bottom: 2px;
         text-transform: uppercase;
+        letter-spacing: 0.8px;
       }
 
       /* LISTS */
 
       ul {
-        margin: 6px 0 10px 20px;
+        margin: 4px 0 6px 15px;
         padding: 0;
       }
 
       li {
-        margin-bottom: 3px;
+        margin-bottom: 1px;
       }
 
       /* EXPERIENCE */
 
       .job {
-        margin-bottom: 12px;
+        margin-bottom: 6px;
       }
 
       .job-header {
@@ -87,23 +98,37 @@
       ul {
         column-count: 1;
       }
+      .watermark {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        pointer-events: none;
+        opacity: 0.12;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><text x="50%" y="50%" text-anchor="middle" fill="black" font-size="14" font-family="Arial" font-weight="bold" transform="rotate(-30 100 100)">AI-Resume_Builder</text></svg>');
+        background-repeat: repeat;
+      }
     </style>
   </head>
 
   <body>
     <!-- HEADER -->
 
-    {% if personal.name or personal.address or personal.phone or personal.email or personal.linkedin %}
-    <div class="header">
-      {% if personal.name %}
-      <div class="name">{{ personal.name }}</div>
-      {% endif %}
+    {% set display_name = personal.name if personal and personal.name else name %}
+    {% set display_email = personal.email if personal and personal.email else email %}
+    {% set display_phone = personal.phone if personal and personal.phone else phone %}
+    {% set display_address = personal.address if personal and personal.address else address %}
+    {% set display_linkedin = personal.linkedin if personal and personal.linkedin else linkedin %}
 
-      {% if personal.address or personal.phone or personal.email or personal.linkedin %}
+    {% if display_name %}
+    <div class="header">
+      <div class="name">{{ display_name }}</div>
+
       <div class="contact">
-        {{ personal.address }}{% if personal.address and personal.phone %} | {% endif %}{{ personal.phone }}{% if (personal.address or personal.phone) and personal.email %} | {% endif %}{{ personal.email }}{% if (personal.address or personal.phone or personal.email) and personal.linkedin %} | {% endif %}{{ personal.linkedin }}
+        {{ display_address }}{% if display_address and display_phone %} | {% endif %}{{ display_phone }}{% if (display_address or display_phone) and display_email %} | {% endif %}{{ display_email }}{% if (display_address or display_phone or display_email) and display_linkedin %} | {% endif %}{{ display_linkedin }}
       </div>
-      {% endif %}
     </div>
     {% endif %}
 
@@ -118,7 +143,7 @@
       <div class="section-title">Skills</div>
 
       <ul>
-        {{ skills | safe }}
+        {{ skills | format_bullets | safe }}
       </ul>
     </div>
     {% endif %} {% if experience %}
@@ -135,7 +160,7 @@
 
         <ul>
           {% for point in job.points %}
-          <li>{{ point }}</li>
+          {{ point | format_bullets | safe }}
           {% endfor %}
         </ul>
       </div>
@@ -145,10 +170,14 @@
     {% endif %} {% if projects %}
     <div class="section">
       <div class="section-title">Projects</div>
-
+      {% for project in projects %}
+      <div class="job-header">
+        <span>{{ project.title }}</span>
+      </div>
       <ul>
-        {{ projects | safe }}
+        {{ project.points | format_bullets | safe }}
       </ul>
+      {% endfor %}
     </div>
     {% endif %} {% if education %}
     <div class="section">
@@ -161,7 +190,7 @@
       <div class="section-title">Certifications</div>
 
       <ul>
-        {{ certifications | safe }}
+        {{ certifications | format_bullets | safe }}
       </ul>
     </div>
     {% endif %} {% if custom_sections %} {% for section in custom_sections %}
@@ -171,11 +200,15 @@
 
       <ul>
         {% for p in section.points %}
-        <li>{{ p }}</li>
+        {{ p | format_bullets | safe }}
         {% endfor %}
       </ul>
     </div>
 
     {% endfor %} {% endif %}
+
+    {% if is_watermarked %}
+    <div class="watermark">AI-Resume_Builder</div>
+    {% endif %}
   </body>
 </html>

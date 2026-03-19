@@ -13,9 +13,34 @@ import pytz
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
-@dashboard_bp.route("/api/dashboard")
+MASTER_EMAIL = "sagnikruproy11@gmail.com"
+
+@dashboard_bp.route("/toggle-premium", methods=["POST"])
+@login_required
+def toggle_premium():
+    """Toggle Pro status for master user."""
+    if current_user.email != MASTER_EMAIL:
+        return jsonify({"message": "Unauthorized"}), 403
+    
+    current_user.is_premium = not current_user.is_premium
+    db.session.commit()
+    
+    status = "Pro" if current_user.is_premium else "Free"
+    flash(f"Account toggled to {status}!", "info")
+    return redirect(url_for('dashboard.index'))
+
+@dashboard_bp.route("/")
 @login_required
 def index():
+    """Render the main dashboard HTML."""
+    resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.created_at.desc()).all()
+    templates = get_all_templates()
+    return render_template("dashboard/index.html", resumes=resumes, templates=templates)
+
+@dashboard_bp.route("/api/dashboard")
+@login_required
+def index_data():
+    """API endpoint for dashboard data."""
     resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.created_at.desc()).all()
     templates = get_all_templates()
     
@@ -38,41 +63,22 @@ def download(resume_id):
     
     if resume.user_id != current_user.id:
         return jsonify({"message": "You are not authorized to view this resume.", "status": "danger"}), 403
-        
+    
+    # MASTER USER PRIVILEGES
+    is_master = current_user.email == MASTER_EMAIL
+    
     ist = pytz.timezone('Asia/Kolkata')
     now_ist = datetime.now(ist)
     midnight_ist = ist.localize(datetime.combine(now_ist.date(), time.min))
             
+    # Check if this user gets a watermark (Free users get watermarked downloads)
     if not current_user.is_premium:
-        daily_downloads = Download.query.filter(
-            Download.user_id == current_user.id,
-            Download.downloaded_at >= midnight_ist
-        ).count()
+        return reconstruct_and_send_pdf(resume, is_watermarked=True)
         
-        if daily_downloads >= 10:
-            return jsonify({
-                "message": "Limit reached", 
-                "status": "danger", 
-                "redirect": "/upgrade"
-            }), 403
-            
-        return jsonify({
-            "message": "Payment required", 
-            "status": "info", 
-            "redirect": f"/payment/{resume.id}"
-        }), 402
-        
-    else:
-        daily_downloads = Download.query.filter(
-            Download.user_id == current_user.id,
-            Download.downloaded_at >= midnight_ist
-        ).count()
-        if daily_downloads >= 100:
-            return jsonify({"message": "Pro limit reached", "status": "danger"}), 403
-            
-    return reconstruct_and_send_pdf(resume)
+    # Premium users get full downloads
+    return reconstruct_and_send_pdf(resume, is_watermarked=False)
 
-def reconstruct_and_send_pdf(resume):
+def reconstruct_and_send_pdf(resume, is_watermarked=False):
     new_download = Download(user_id=current_user.id, resume_id=resume.id)
     db.session.add(new_download)
     db.session.commit()
@@ -81,7 +87,7 @@ def reconstruct_and_send_pdf(resume):
     template_name = resume.template_id or "template1"
     template_file = get_template_file(template_name)
     
-    pdf = generate_pdf(resume_data, template_file)
+    pdf = generate_pdf(resume_data, template_file, is_watermarked=is_watermarked)
     
     return send_file(
         BytesIO(pdf),

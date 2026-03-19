@@ -7,18 +7,21 @@ config = pdfkit.configuration(
 
 options = {
     "page-size": "A4",
-    "margin-top": "0in",
-    "margin-bottom": "0in",
-    "margin-left": "0in",
-    "margin-right": "0in",
+    "margin-top": "0.5in",
+    "margin-bottom": "0.5in",
+    "margin-left": "0.5in",
+    "margin-right": "0.5in",
     "encoding": "UTF-8",
     "disable-smart-shrinking": "",
     "zoom": "1.0",
     "dpi": "96",
-    "viewport-size": "1024x768"
+    "viewport-size": "1024x768",
+    "print-media-type": ""
 }
 
-def generate_pdf(data, template_file):
+def generate_pdf(data, template_file, is_watermarked=False):
+    # Pass watermark flag to template
+    data['is_watermarked'] = is_watermarked
 
     # unpack dictionary so template receives variables directly
     html = render_template(template_file, **data)

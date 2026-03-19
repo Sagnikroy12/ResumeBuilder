@@ -17,7 +17,7 @@ class Download(db.Model):
 
     # Relationships
     user = db.relationship('User', backref=db.backref('downloads', lazy=True))
-    resume = db.relationship('Resume', backref=db.backref('downloads', lazy=True))
+    resume = db.relationship('Resume', backref=db.backref('downloads', lazy=True, cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<Download {self.resume_id} by User {self.user_id}>'
