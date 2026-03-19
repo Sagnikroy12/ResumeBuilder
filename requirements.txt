@@ -12,7 +12,7 @@ isort==5.12.0
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Flask-Bcrypt==1.0.1
-Flask-Migrate==4.0.5
+psycopg2-binary==2.9.9
 google-genai==0.1.0
 pypdf==5.3.0
 pytz==2023.3.post1

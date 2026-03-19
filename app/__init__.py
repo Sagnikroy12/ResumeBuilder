@@ -3,7 +3,7 @@ from flask import Flask
 from .models import User, Resume
 from .routes.resume_routes import resume_bp
 from .config.config import get_config
-from .extensions import db, login_manager, bcrypt, migrate
+from .extensions import db, login_manager, bcrypt
 from flask_cors import CORS
 
 def create_app(config_name=None):
@@ -28,7 +28,7 @@ def create_app(config_name=None):
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
-    migrate.init_app(app, db)
+    # migrate.init_app(app, db) # Removed as per user request
     
     # Ensure upload folder exists
     os.makedirs(app.config.get("UPLOAD_FOLDER", "uploads"), exist_ok=True)
@@ -36,9 +36,19 @@ def create_app(config_name=None):
     # Register blueprints
     from .routes.auth_routes import auth_bp
     from .routes.dashboard_routes import dashboard_bp
+    from .routes.debug_routes import debug_bp
     app.register_blueprint(resume_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(debug_bp)
+    
+    # Create database tables within app context
+    with app.app_context():
+        try:
+            db.create_all()
+            app.logger.info("Database tables created/verified successfully.")
+        except Exception as e:
+            app.logger.error(f"Error during db.create_all(): {str(e)}")
     
     # Error handlers
     @app.errorhandler(404)
