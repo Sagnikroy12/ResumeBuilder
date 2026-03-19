@@ -3,6 +3,7 @@ import os
 import json
 import openai
 import anthropic
+import base64
 
 class AIService:
     @staticmethod
@@ -141,10 +142,13 @@ class AIService:
                 print(f"Attempting with {name}...")
                 result = func(prompt)
                 if result:
+                    print(f"\n[{name} RAW RESPONSE:]\n{result}\n" + "="*50)
                     if is_json:
                         # Basic JSON extraction
                         clean_json = result.replace('```json', '').replace('```', '').strip()
-                        return json.loads(clean_json)
+                        parsed_json = json.loads(clean_json)
+                        print(f"[{name} PARSED JSON:]\n{json.dumps(parsed_json, indent=2)}\n" + "="*50)
+                        return parsed_json
                     return result
                 else:
                     errors.append(f"{name}: API Key missing")
@@ -171,10 +175,80 @@ class AIService:
         return f"AI Error: All available providers exhausted. Details: {error_summary}"
 
     @staticmethod
+    def _encode_context(text_or_dict):
+        """
+        Compresses and encrypts context. If it's a JSON string or dict, 
+        it selectively avoids encrypting personal info and titles to prevent hallucination.
+        """
+        if not text_or_dict:
+            return "", ""
+            
+        import re
+        import json
+        
+        vowel_map = {'a': '1', 'e': '2', 'i': '3', 'o': '4', 'u': '5',
+                     'A': '1', 'E': '2', 'I': '3', 'O': '4', 'U': '5'}
+        
+        def encode_str(s):
+            if not isinstance(s, str):
+                return s
+            compressed = re.sub(r'\s+', ' ', s).strip()
+            return "".join(vowel_map.get(c, c) for c in compressed)
+
+        data = text_or_dict
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except:
+                pass # Not JSON, just encode the whole string
+                
+        if isinstance(data, dict):
+            # It's a structured resume, let's selectively encode
+            encoded_dict = {}
+            for k, v in data.items():
+                if k == 'personal':
+                    encoded_dict[k] = v # Do not encode personal info
+                elif k == 'experience' and isinstance(v, list):
+                    encoded_dict[k] = []
+                    for exp in v:
+                        if isinstance(exp, dict):
+                            new_exp = exp.copy()
+                            if 'points' in new_exp:
+                                new_exp['points'] = encode_str(new_exp['points'])
+                            encoded_dict[k].append(new_exp)
+                elif k in ['objective', 'skills', 'projects', 'certifications', 'education']:
+                    if isinstance(v, list):
+                        encoded_dict[k] = [encode_str(item.get('points', '')) if isinstance(item, dict) else encode_str(item) for item in v]
+                    else:
+                        encoded_dict[k] = encode_str(v)
+                else:
+                    encoded_dict[k] = v
+                    
+            instructions = (
+                "DECRYPTION INSTRUCTIONS:\n"
+                "The text is a JSON object where ONLY specific fields like 'objective', 'skills', 'projects', and 'points' "
+                "are compressed and encrypted using a Vowel-Number cipher (1=a/A, 2=e/E, 3=i/I, 4=o/O, 5=u/U).\n"
+                "Personal details, Names, Contacts, Job titles, Companies, and Durations remain UNENCRYPTED in plain text.\n"
+                "Read and decrypt the encrypted fields carefully before performing any extraction or tailoring."
+            )
+            return json.dumps(encoded_dict, indent=2), instructions
+
+        # Fallback to full string encoding (for raw PDF text)
+        encoded = encode_str(text_or_dict)
+        instructions = (
+            "DECRYPTION INSTRUCTIONS:\n"
+            "The context provided is compressed (extra spaces removed) and encrypted using a Vowel-Number cipher.\n"
+            "To decrypt, replace numbers back to vowels: 1=a/A, 2=e/E, 3=i/I, 4=o/O, 5=u/U.\n"
+            "Read and decrypt the context carefully before performing any extraction or tailoring."
+        )
+        return encoded, instructions
+
+    @staticmethod
     def get_suggestion(section, context=""):
         prompt = f"Act as a professional resume writer. Provide high-quality, ATS-friendly content for the '{section}' section of a resume. "
         if context:
-            prompt += f"The user has provided this initial draft/context: '{context}'. Please enhance and expand upon this to make it professional and impactful. "
+            encoded_context, decode_instructions = AIService._encode_context(context)
+            prompt += f"{decode_instructions}\nEncoded Context: '{encoded_context}'.\n\nPlease enhance and expand upon the decoded context to make it professional and impactful. "
         else:
             prompt += "Provide a general professional example. "
         prompt += "Return ONLY the suggested content text, no preamble, no quotes, and no extra formatting."
@@ -182,8 +256,17 @@ class AIService:
 
     @staticmethod
     def parse_resume(file_content):
+        encoded_content, decode_instructions = AIService._encode_context(file_content)
         prompt = f"""
         Act as an ATS parser. Extract key information from the following resume text and return it as a structured JSON object.
+        
+        {decode_instructions}
+        
+        CRITICAL INSTRUCTIONS for parsing:
+        1. All output MUST be in plain English. DO NOT output any encrypted text.
+        2. Extract the candidate's Name, Email, or LinkedIn URL from the DECRYPTED text exactly as they appear.
+        3. Extract Job Titles, Company Names, Locations, and Durations from the DECRYPTED text.
+        4. For 'skills', group them into logical categories (e.g., 'Automation & Testing', 'Languages', 'DevOps & Tools', 'Methodologies'). Format each category on a new line as 'Category: Skill 1, Skill 2'. Do NOT use a single long list of bullet points.
         
         JSON Structure MUST be exactly like this:
         {{
@@ -195,7 +278,7 @@ class AIService:
                 "linkedin": "linkedin.com/in/username"
             }},
             "objective": "Professional summary...",
-            "skills": "Skill 1\\nSkill 2\\nSkill 3",
+            "skills": "Category 1: Skill A, Skill B\\nCategory 2: Skill C, Skill D",
             "education": "Brief education history...",
             "experience": [
                 {{
@@ -204,17 +287,17 @@ class AIService:
                     "points": "Point 1\\nPoint 2"
                 }}
             ],
-            "projects": "Project 1\\nProject 2",
+            "projects": "Project 1: Point 1\\nProject 2: Point 2",
             "certifications": "Cert 1\\nCert 2"
         }}
         
         Important:
-        - Return 'skills', 'projects', and 'certifications' as multiline strings (each item on a new line).
-        - 'experience' list items should have 'points' as a multiline string.
+        - Return 'skills', 'projects', and 'certifications' ONLY as multiline strings (a single string with \\n separators format). DO NOT return arrays for these.
+        - 'experience' MUST be an array of objects.
         - Normalize the metadata into the 'personal' object.
         
-        Resume Text:
-        {file_content}
+        Encoded Resume Text:
+        {encoded_content}
         
         Return ONLY the raw JSON object. No other text.
         """
@@ -222,9 +305,24 @@ class AIService:
 
     @staticmethod
     def tailor_resume(file_content, job_description):
+        encoded_resume, resume_instructions = AIService._encode_context(file_content)
+        encoded_jd, _ = AIService._encode_context(job_description)
+        
         prompt = f"""
-        Act as an expert career coach. Tailor the following resume to better match the job description provided.
-        Extract and adapt information into this structured JSON object:
+        Act as an expert career coach. Your task is to aggressively TAILOR the following resume to perfectly match the provided job description.
+        You must highlight relevant skills, adjust the objective, and rewrite experience points to align with the job requirements.
+        
+        {resume_instructions}
+        
+        CRITICAL INSTRUCTIONS for tailoring:
+        0. ALL output in the JSON MUST be plain English. NEVER output encrypted/vowel-replaced strings. Decrypt everything first.
+        1. Keep the candidate's DECRYPTED Name, Email, Phone, Address, and LinkedIn EXACTLY the same as in the original DECRYPTED resume.
+        2. Keep the DECRYPTED Job Titles, Company Names, Locations, and Durations under experience. ONLY rewrite the bullet points ("points").
+        3. Keep the DECRYPTED Education history. ONLY rewrite Project and Experience bullet points.
+        4. For 'skills', group them into logical categories (e.g., 'Automation & Testing', 'Languages', 'DevOps & Tools', 'Methodologies'). Format each category on a new line as 'Category: Skill 1, Skill 2'. Do NOT use a single long list of bullet points.
+        5. Ensure the tailored content is short, concise, and punchy for quick attraction. Maintain a professional tone while being impactful.
+        
+        Extract and adapt information into this EXACT structured JSON object:
         
         {{
             "personal": {{
@@ -234,26 +332,30 @@ class AIService:
                 "address": "City, Country",
                 "linkedin": "linkedin.com/in/username"
             }},
-            "objective": "Tailored summary...",
-            "skills": "Tailored Skill 1\\nTailored Skill 2",
+            "objective": "A highly tailored professional summary matching the JD...",
+            "skills": "Category 1: Skill A, Skill B\\nCategory 2: Skill C, Skill D",
             "education": "Brief education history...",
             "experience": [
                 {{
                     "title": "Job Title",
                     "duration": "Jan 2020 - Present",
-                    "points": "Tailored Point 1\\nTailored Point 2"
+                    "points": "Tailored Point 1\\nTailored Point 2\\n(Rewrite to match JD)"
                 }}
             ],
-            "projects": "Tailored Project 1",
-            "certifications": "Certs..."
+            "projects": "Tailored Project 1: Point 1\\nTailored Project 2",
+            "certifications": "Cert 1\\nCert 2"
         }}
         
-        Resume:
-        {file_content}
+        Important:
+        - Return 'skills', 'projects', and 'certifications' ONLY as multiline strings (a single string with \\n separators format). DO NOT return arrays for these.
+        - 'experience' MUST be an array of objects.
         
-        Job Description:
-        {job_description}
+        Encoded Resume Text:
+        {encoded_resume}
         
-        Return ONLY the raw JSON object.
+        Encoded Job Description:
+        {encoded_jd}
+        
+        Return ONLY the raw JSON object. No other text.
         """
         return AIService._execute_with_fallback(prompt, is_json=True)

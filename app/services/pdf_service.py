@@ -7,11 +7,15 @@ config = pdfkit.configuration(
 
 options = {
     "page-size": "A4",
-    "margin-top": "0.5in",
-    "margin-bottom": "0.5in",
-    "margin-left": "0.5in",
-    "margin-right": "0.5in",
-    "encoding": "UTF-8"
+    "margin-top": "0in",
+    "margin-bottom": "0in",
+    "margin-left": "0in",
+    "margin-right": "0in",
+    "encoding": "UTF-8",
+    "disable-smart-shrinking": "",
+    "zoom": "1.0",
+    "dpi": "96",
+    "viewport-size": "1024x768"
 }
 
 def generate_pdf(data, template_file):
