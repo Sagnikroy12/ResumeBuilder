@@ -50,7 +50,8 @@ async function getAiSuggestion(event, section, element = null, context = "") {
     const btn = event.currentTarget;
     const originalBtnText = btn.innerHTML;
     btn.innerHTML = "🌀 Thinking...";
-    btn.classList.add("suggesting");
+    btn.classList.add("loading");
+    btn.disabled = true;
 
     try {
         const response = await fetch(suggestApiUrl, {
@@ -75,9 +76,11 @@ async function getAiSuggestion(event, section, element = null, context = "") {
         }
     } catch (error) {
         console.error("AI Error:", error);
+        alert("AI Error: Failed to connect to service. Please check your connection.");
     } finally {
         btn.innerHTML = originalBtnText;
-        btn.classList.remove("suggesting");
+        btn.classList.remove("loading");
+        btn.disabled = false;
     }
 }
 
