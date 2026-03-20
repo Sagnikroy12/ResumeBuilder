@@ -43,5 +43,8 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/')" || exit 1
 
-# Run the application with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "run:app"]
+# Default port mapping (Render will override this)
+ENV PORT=5000
+
+# Run the application with gunicorn using the shell form to evaluate $PORT
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 4 --timeout 60 --access-logfile - --error-logfile - run:app
