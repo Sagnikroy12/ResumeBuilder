@@ -8,6 +8,26 @@ from app.utils.text_utils import parse_bullets
 
 class ResumeService:
     @staticmethod
+    def _flatten_value(value):
+        """Recursively flatten any list or dict into a single comma-separated string."""
+        if not value:
+            return ""
+        if isinstance(value, str):
+            # Ignore placeholder strings that AI failed to replace
+            if "__" in value and "ADDRESS" in value:
+                return ""
+            return value.strip()
+        if isinstance(value, list):
+            # Flatten lists and remove empty/placeholder items
+            items = [ResumeService._flatten_value(item) for item in value]
+            return ", ".join(filter(None, items))
+        if isinstance(value, dict):
+            # Flatten dicts by concatenating all their values
+            items = [ResumeService._flatten_value(v) for v in value.values()]
+            return ", ".join(filter(None, items))
+        return str(value).strip()
+
+    @staticmethod
     def to_li(items):
         """Convert list of strings into HTML <li> elements with bold formatting before colons."""
         result = []
@@ -32,14 +52,12 @@ class ResumeService:
         for field in ("skills", "certifications"):
             value = data.get(field, "")
             if isinstance(value, dict):
-                # Handle dict mapping category to list of skills (from AI parse)
+                # Handle dict mapping category to list/dict of skills (from AI parse)
                 flattened_parts = []
                 for k, v in value.items():
-                    if isinstance(v, list):
-                        v_str = ", ".join(str(item) for item in v)
-                    else:
-                        v_str = str(v)
-                    flattened_parts.append(f"{k}: {v_str}")
+                    v_str = ResumeService._flatten_value(v)
+                    if v_str.strip():
+                        flattened_parts.append(f"{k}: {v_str}")
                 data[field] = "\n".join(flattened_parts)
             elif isinstance(value, list):
                 # Handle list of dicts (from AI parse)
@@ -63,6 +81,24 @@ class ResumeService:
                 # Keep as raw string for the editor, but clean it up
                 bullets = parse_bullets(value)
                 data[field] = "\n".join(bullets)
+
+        # Normalize education and objective which can also sometimes come as dicts/lists
+        for field in ("education", "objective"):
+            value = data.get(field, "")
+            if isinstance(value, dict):
+                flattened_parts = []
+                for k, v in value.items():
+                    v_str = ResumeService._flatten_value(v)
+                    if v_str.strip():
+                        flattened_parts.append(f"{k}: {v_str}")
+                data[field] = "\n\n".join(flattened_parts)
+            elif isinstance(value, list):
+                parts = []
+                for item in value:
+                    v_str = ResumeService._flatten_value(item)
+                    if v_str:
+                        parts.append(v_str)
+                data[field] = "\n\n".join(parts)
 
         # Normalize projects - keep as list-of-dicts for server-side Jinja templates
         # (templates iterate with project.title and project.points)

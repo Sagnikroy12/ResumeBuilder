@@ -37,6 +37,7 @@ class AIService:
         if not client: return None
         response = client.chat.completions.create(
             model=model,
+            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -78,6 +79,7 @@ class AIService:
             return None
         response = client.chat.completions.create(
             model=model,
+            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -90,6 +92,7 @@ class AIService:
             return None
         response = client.chat.completions.create(
             model=model,
+            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -103,6 +106,7 @@ class AIService:
             return None
         response = client.chat.completions.create(
             model=model,
+            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -119,6 +123,7 @@ class AIService:
         if not client: return None
         response = client.chat.completions.create(
             model=model,
+            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -148,8 +153,9 @@ class AIService:
                 if "401" in err or "INVALID" in err:
                     break
         
-        # If we get here, all failed. We return None so the main loop can move to SambaNova
-        return None
+        # If we get here, all failed. We raise an exception instead of returning None
+        # so the outer wrapper doesn't mistakenly log "API Key missing"
+        raise Exception(f"All Gemini models failed: { ' | '.join(errors) }")
 
     @staticmethod
     def _execute_with_fallback(prompt, is_json=False):

@@ -92,7 +92,7 @@ class ResumeEncoder:
             return item
 
         if isinstance(data, (dict, list)):
-            encoded_data, metadata = process_recursive(data)
+            encoded_data = process_recursive(data)
             return encoded_data, metadata
         
         # If it's just raw text (from PDF)
