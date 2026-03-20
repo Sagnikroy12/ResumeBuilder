@@ -85,13 +85,34 @@ def create_resume():
         if request.is_json:
             raw_data = request.get_json()
         else:
-            # Reconstruct dictionary from form fields
+            # Reconstruct structured dictionary from flat form fields
             raw_data = request.form.to_dict()
-            # Special handling for experience/custom blocks if they come as lists
-            # Note: request.form.to_dict() might not capture lists well, but 
-            # the current form.js/form.html doesn't use arrays in standard POST 
-            # (they are typically handled via AJAX or simple scalar fields)
-            pass
+            
+            # Special handling for arrays (experience, custom sections)
+            # request.form.to_dict() only gets the last value for duplicate keys
+            exp_titles = request.form.getlist('exp_title[]')
+            exp_durations = request.form.getlist('exp_duration[]')
+            exp_points = request.form.getlist('exp_points[]')
+            
+            if exp_titles:
+                raw_data['experience'] = []
+                for i in range(len(exp_titles)):
+                    raw_data['experience'].append({
+                        "title": exp_titles[i],
+                        "duration": exp_durations[i] if i < len(exp_durations) else "",
+                        "points": exp_points[i] if i < len(exp_points) else ""
+                    })
+
+            custom_titles = request.form.getlist('section_title[]')
+            custom_points = request.form.getlist('section_points[]')
+            
+            if custom_titles:
+                raw_data['custom_sections'] = []
+                for i in range(len(custom_titles)):
+                    raw_data['custom_sections'].append({
+                        "title": custom_titles[i],
+                        "points": custom_points[i] if i < len(custom_points) else ""
+                    })
         
         # 1. Limit Check
         allowed, message = ResumeService.check_daily_limit(current_user)

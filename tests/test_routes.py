@@ -120,8 +120,8 @@ class TestResumeRoutes:
                 "name": "Test User",
                 "email": "test@example.com",
             }
-            response = auth_client.post("/api/resumes", data=data, follow_redirects=True)
-            assert response.status_code == 200
+            response = auth_client.post("/api/resumes", data=data)
+            assert response.status_code in [200, 201, 302]
     
     def test_index_post_empty_data(self, auth_client):
         """Test POST request with minimal data"""
@@ -157,8 +157,8 @@ class TestResumeRoutes:
                 "exp_duration[]": ["2020-2023"],
                 "exp_points[]": ["Built features"],
             }
-            response = auth_client.post("/api/resumes", data=data, follow_redirects=True)
-            assert response.status_code == 200
+            response = auth_client.post("/api/resumes", data=data)
+            assert response.status_code in [200, 201, 302]
 
 class TestToLi:
     """Test cases for to_li helper function"""

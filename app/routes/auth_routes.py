@@ -5,49 +5,105 @@ from app.extensions import db, bcrypt
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    data = request.get_json()
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+        
+    if request.method == 'GET':
+        return render_template('auth/register.html')
+
+    # Handle POST
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
     
+    if not username or not email or not password:
+        msg = "Missing required fields."
+        if request.is_json: return jsonify({"message": msg, "status": "danger"}), 400
+        flash(msg, "danger")
+        return render_template('auth/register.html')
+
     user_exists = User.query.filter_by(username=username).first()
     email_exists = User.query.filter_by(email=email).first()
     
     if user_exists:
-        return jsonify({"message": "Username is already taken.", "status": "danger"}), 400
+        msg = "Username is already taken."
+        if request.is_json: return jsonify({"message": msg, "status": "danger"}), 400
+        flash(msg, "danger")
+        return render_template('auth/register.html')
     elif email_exists:
-        return jsonify({"message": "Email is already registered.", "status": "danger"}), 400
+        msg = "Email is already registered."
+        if request.is_json: return jsonify({"message": msg, "status": "danger"}), 400
+        flash(msg, "danger")
+        return render_template('auth/register.html')
     else:
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(username=username, email=email, password_hash=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "Your account has been created!", "status": "success"}), 201
+        
+        msg = "Your account has been created! Please log in."
+        if request.is_json:
+            return jsonify({"message": msg, "status": "success"}), 201
+            
+        flash(msg, "success")
+        return redirect(url_for('auth.login'))
 
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    data = request.get_json()
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+
+    if request.method == 'GET':
+        return render_template('auth/login.html')
+
+    # Handle POST
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
     email = data.get('email')
     password = data.get('password')
+    remember = data.get('remember', False)
+    if isinstance(remember, str): remember = remember.lower() == 'on'
     
     user = User.query.filter_by(email=email).first()
     if user and bcrypt.check_password_hash(user.password_hash, password):
-        login_user(user, remember=data.get('remember', False))
-        return jsonify({
-            "message": "Login Successful!", 
-            "status": "success",
-            "user": {"id": user.id, "username": user.username, "email": user.email, "is_premium": user.is_premium}
-        }), 200
+        login_user(user, remember=remember)
+        
+        if request.is_json:
+            return jsonify({
+                "message": "Login Successful!", 
+                "status": "success",
+                "user": {"id": user.id, "username": user.username, "email": user.email, "is_premium": user.is_premium}
+            }), 200
+            
+        flash("Login Successful!", "success")
+        return redirect(url_for('dashboard.index'))
     else:
-        return jsonify({"message": "Login Unsuccessful. Please check email and password", "status": "danger"}), 401
+        msg = "Login Unsuccessful. Please check email and password"
+        if request.is_json:
+            return jsonify({"message": msg, "status": "danger"}), 401
+            
+        flash(msg, "danger")
+        return render_template('auth/login.html')
 
-@auth_bp.route('/logout', methods=['POST'])
+@auth_bp.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
     logout_user()
-    return jsonify({"message": "You have been logged out.", "status": "info"}), 200
+    if request.method == 'POST' and request.is_json:
+        return jsonify({"message": "You have been logged out.", "status": "info"}), 200
+        
+    flash("You have been logged out.", "info")
+    return redirect(url_for('auth.login'))
 
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():

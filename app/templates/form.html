@@ -24,7 +24,7 @@
       <div class="form-panel">
         <h2>Build Your Resume</h2>
 
-        <form method="POST" id="resume-form">
+        <form method="POST" id="resume-form" action="{{ url_for('resume.create_resume') }}">
           <input type="hidden" name="id" value="{{ resume_id if resume_id else '' }}">
           <!-- TEMPLATE -->
 
