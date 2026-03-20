@@ -69,6 +69,9 @@ async function getAiSuggestion(event, section, element = null, context = "") {
                 targetElement.value = data.suggestion;
                 updatePreview();
             }
+        } else if (data.error) {
+            // Show user-facing error if all providers failed
+            alert("AI Error: " + (data.error || "Multiple providers exhausted. Please try again later."));
         }
     } catch (error) {
         console.error("AI Error:", error);

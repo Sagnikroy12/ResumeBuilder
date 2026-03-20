@@ -98,7 +98,8 @@ class AIService:
     def _call_sambanova(prompt, model='Meta-Llama-3.3-70B-Instruct'):
         client = AIService._get_sambanova_client()
         if not client: 
-            print("SambaNova Error: API Key missing in environment")
+            from flask import current_app
+            current_app.logger.error("SambaNova Error: API Key missing in environment")
             return None
         response = client.chat.completions.create(
             model=model,
@@ -126,29 +127,24 @@ class AIService:
     def _call_gemini_with_fallback(prompt):
         """Internal Gemini fallback: tries multiple versions before giving up"""
         models = [
-            # 'gemini-1.5-flash',
-            # 'gemini-1.5-pro',
-            # 'gemini-2.0-flash-exp',
-            # 'gemini-2.0-flash',
-            # 'gemini-1.5-flash-8b',
-            'gemini-2.5-flash',
-            'gemini-2.5-flash-lite',
-            'gemini-2.5-flash-tts',
-            'gemini-3-flash',
-            'gemini-3.1-flash-lite'
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
+            'gemini-2.0-flash-lite-preview-02-05',
+            'gemini-1.5-flash-8b'
         ]
         
         errors = []
         for model in models:
             try:
-                print(f"  [GEMINI SUB-ATTEMPT] {model}...")
+                from flask import current_app
+                current_app.logger.info(f"  [GEMINI SUB-ATTEMPT] {model}...")
                 res = AIService._call_gemini(prompt, model=model)
                 if res: return res
             except Exception as e:
                 err = str(e).upper()
-                print(f"  [GEMINI SUB-ATTEMPT FAILED] {model}: {e}")
+                current_app.logger.warning(f"  [GEMINI SUB-ATTEMPT FAILED] {model}: {e}")
                 errors.append(f"{model}: {e}")
-                # If it's a 429, continue to next model. If it's a 401/Invalid Key, stop early.
                 if "401" in err or "INVALID" in err:
                     break
         
@@ -171,25 +167,23 @@ class AIService:
         errors = []
         for name, func in providers:
             try:
-                # Skip if key is missing (func returns None if key missing)
-                print(f"Attempting with {name}...")
+                from flask import current_app
+                current_app.logger.info(f"Attempting with {name}...")
                 result = func(prompt)
                 if result:
-                    print(f"\n[{name} RAW RESPONSE:]\n{result}\n" + "="*50)
+                    current_app.logger.info(f"[{name} SUCCESSFUL]")
                     if is_json:
-                        # Basic JSON extraction
                         clean_json = result.replace('```json', '').replace('```', '').strip()
                         parsed_json = json.loads(clean_json)
-                        print(f"[{name} PARSED JSON successfully]")
+                        current_app.logger.info(f"[{name} PARSED JSON successfully]")
                         return parsed_json
                     return result
                 else:
                     errors.append(f"{name}: API Key missing")
             except Exception as e:
                 err_msg = str(e).upper()
-                print(f"{name} Error: {e}")
+                current_app.logger.warning(f"{name} Error: {e}")
                 
-                # Categorize common errors for the user
                 if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg or "RATE_LIMIT" in err_msg:
                     errors.append(f"{name}: Quota/Rate Limit")
                 elif "402" in err_msg or "INSUFFICIENT" in err_msg or "BALANCE" in err_msg or "CREDIT" in err_msg:
@@ -199,7 +193,6 @@ class AIService:
                 else:
                     errors.append(f"{name}: {str(e)[:30]}")
                 
-                # Continue to next provider
                 continue
         
         error_summary = " | ".join(errors)
