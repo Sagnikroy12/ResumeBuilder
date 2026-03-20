@@ -19,6 +19,7 @@ WORKDIR /app
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    wkhtmltopdf \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python dependencies from builder
