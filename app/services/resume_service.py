@@ -31,7 +31,17 @@ class ResumeService:
         # Normalize simple list fields (rendered as bullet lists in templates)
         for field in ("skills", "certifications"):
             value = data.get(field, "")
-            if isinstance(value, list):
+            if isinstance(value, dict):
+                # Handle dict mapping category to list of skills (from AI parse)
+                flattened_parts = []
+                for k, v in value.items():
+                    if isinstance(v, list):
+                        v_str = ", ".join(str(item) for item in v)
+                    else:
+                        v_str = str(v)
+                    flattened_parts.append(f"{k}: {v_str}")
+                data[field] = "\n".join(flattened_parts)
+            elif isinstance(value, list):
                 # Handle list of dicts (from AI parse)
                 flattened_parts = []
                 for item in value:

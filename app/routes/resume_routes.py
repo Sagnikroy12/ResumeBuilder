@@ -172,7 +172,8 @@ def upload():
         
         if isinstance(extracted_data, dict) and "error" not in extracted_data:
             current_app.logger.info(f"Resume parsed successfully for user {current_user.id}")
-            return success_response("Resume successfully parsed!", {"extracted_data": extracted_data})
+            normalized_data = ResumeService.normalize_resume_data(extracted_data)
+            return success_response("Resume successfully parsed!", {"extracted_data": normalized_data})
         else:
             error_msg = extracted_data.get('error') if isinstance(extracted_data, dict) else extracted_data
             current_app.logger.error(f"AI parsing failed with: {error_msg}")
@@ -201,7 +202,8 @@ def tailor():
         tailored_data = AIService.tailor_resume(resume.data, jd)
         
         if isinstance(tailored_data, dict) and "error" not in tailored_data:
-            return success_response("Resume successfully tailored!", {"tailored_data": tailored_data})
+            normalized_tailored = ResumeService.normalize_resume_data(tailored_data)
+            return success_response("Resume successfully tailored!", {"tailored_data": normalized_tailored})
         else:
             error_msg = tailored_data.get('error') if isinstance(tailored_data, dict) else tailored_data
             current_app.logger.error(f"AI tailoring error: {error_msg}")
