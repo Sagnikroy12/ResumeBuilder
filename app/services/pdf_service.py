@@ -1,9 +1,18 @@
 from flask import render_template
 import pdfkit
 
-config = pdfkit.configuration(
-    wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-)
+import os
+import platform
+import shutil
+
+# Dynamically decide wkhtmltopdf path based on OS
+if platform.system() == "Windows":
+    wkhtmltopdf_path = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+else:
+    # Linux (Docker)
+    wkhtmltopdf_path = shutil.which("wkhtmltopdf") or "/usr/bin/wkhtmltopdf"
+
+config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
 
 options = {
     "page-size": "A4",
