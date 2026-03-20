@@ -140,7 +140,11 @@
                 id="projects"
                 placeholder="One project per line..."
                 oninput="updatePreview()"
-              >{{ resume_data.projects if resume_data and resume_data.projects else '' }}</textarea>
+              >{% if resume_data and resume_data.projects %}{% if resume_data.projects is iterable and resume_data.projects is not string %}{% for p in resume_data.projects %}{% if p is mapping %}{% if p.title %}{{ p.title }}
+{% endif %}{% if p.points is iterable and p.points is not string %}{% for pt in p.points %}{{ pt }}
+{% endfor %}{% elif p.points %}{{ p.points }}
+{% endif %}{% else %}{{ p }}
+{% endif %}{% endfor %}{% else %}{{ resume_data.projects }}{% endif %}{% endif %}</textarea>
             </div>
 
             <!-- EDUCATION -->

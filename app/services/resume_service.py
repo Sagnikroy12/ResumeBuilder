@@ -28,13 +28,56 @@ class ResumeService:
 
         data = data.copy()
 
-        # Normalize list fields
-        for field in ("skills", "projects", "certifications"):
+        # Normalize simple list fields (rendered as bullet lists in templates)
+        for field in ("skills", "certifications"):
             value = data.get(field, "")
-            if isinstance(value, str):
+            if isinstance(value, list):
+                # Handle list of dicts (from AI parse)
+                flattened_parts = []
+                for item in value:
+                    if isinstance(item, dict):
+                        title = item.get("title", "")
+                        points = item.get("points", "")
+                        if isinstance(points, list):
+                            points = "\n".join(points)
+                        if title and points:
+                            flattened_parts.append(f"{title}\n{points}")
+                        elif title:
+                            flattened_parts.append(title)
+                        elif points:
+                            flattened_parts.append(points)
+                    elif isinstance(item, str):
+                        flattened_parts.append(item)
+                data[field] = "\n".join(flattened_parts)
+            elif isinstance(value, str):
                 # Keep as raw string for the editor, but clean it up
                 bullets = parse_bullets(value)
                 data[field] = "\n".join(bullets)
+
+        # Normalize projects - keep as list-of-dicts for server-side Jinja templates
+        # (templates iterate with project.title and project.points)
+        projects = data.get("projects", "")
+        if isinstance(projects, str):
+            # Convert string to list-of-dicts format for template consistency
+            bullets = parse_bullets(projects)
+            if bullets:
+                data["projects"] = [{"title": "", "points": bullets}]
+            else:
+                data["projects"] = []
+        elif isinstance(projects, list):
+            # Already a list - normalize each entry to ensure dict format
+            normalized_projects = []
+            for item in projects:
+                if isinstance(item, dict):
+                    points = item.get("points", "")
+                    if isinstance(points, str):
+                        item["points"] = parse_bullets(points)
+                    normalized_projects.append(item)
+                elif isinstance(item, str):
+                    normalized_projects.append({"title": "", "points": [item]})
+            data["projects"] = normalized_projects
+        else:
+            data["projects"] = []
 
         # Normalize experience entries
         experience = data.get("experience", [])

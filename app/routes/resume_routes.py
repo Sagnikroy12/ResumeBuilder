@@ -219,11 +219,13 @@ def suggest():
         section = data.get("section")
         context = data.get("context", "")
         
+        full_resume = data.get("full_resume")
+        
         if not section:
             return error_response("Section name is required", 400)
             
         current_app.logger.info(f"Requesting AI suggestion for section '{section}' (User: {current_user.id})")
-        suggestion = AIService.get_suggestion(section, context)
+        suggestion = AIService.get_suggestion(section, context, full_resume=full_resume)
         return success_response("Suggestion retrieved", {"suggestion": suggestion})
     except Exception as e:
         current_app.logger.error(f"Error fetching AI suggestion: {str(e)}")

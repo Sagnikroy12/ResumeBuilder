@@ -27,7 +27,10 @@ function addExperience(initialData = null) {
     aiBtn.onclick = function(e) {
         const textarea = block.querySelector('textarea');
         const title = block.querySelector('input[name="exp_title[]"]').value;
-        getAiSuggestion(e, 'experience', textarea, title);
+        const responsibilities = textarea.value || "";
+        // Send using clear tags so the AI service can separate background context from content to reframe
+        let fullContext = `JOB_TITLE: ${title}\nEXISTING_CONTENT: ${responsibilities}`;
+        getAiSuggestion(e, 'Experience', textarea, fullContext);
     };
     block.appendChild(aiBtn);
   }
@@ -53,7 +56,11 @@ async function getAiSuggestion(event, section, element = null, context = "") {
         const response = await fetch(suggestApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ section: section, context: context })
+            body: JSON.stringify({ 
+                section: section, 
+                context: context,
+                full_resume: getFormData()
+            })
         });
         const data = await response.json();
         
@@ -76,6 +83,40 @@ function removeBlock(btn) {
   updatePreview();
 }
 
+/**
+ * Collects all current form data into a structured JSON object
+ */
+function getFormData() {
+    const data = {};
+    data.name = document.querySelector("[name='name']")?.value || "";
+    data.email = document.querySelector("[name='email']")?.value || "";
+    data.phone = document.querySelector("[name='phone']")?.value || "";
+    data.linkedin = document.querySelector("[name='linkedin']")?.value || "";
+    data.address = document.querySelector("[name='address']")?.value || "";
+    data.objective = document.querySelector("[name='objective']")?.value || "";
+    data.skills = document.querySelector("[name='skills']")?.value || "";
+    data.education = document.querySelector("[name='education']")?.value || "";
+    data.projects = document.querySelector("[name='projects']")?.value || "";
+
+    /* EXPERIENCE */
+    const expBlocks = document.querySelectorAll(".exp-block");
+    data.experience = Array.from(expBlocks).map(block => ({
+        title: block.querySelector("[name='exp_title[]']")?.value || "",
+        duration: block.querySelector("[name='exp_duration[]']")?.value || "",
+        points: block.querySelector("[name='exp_points[]']")?.value || ""
+    }));
+
+    /* CUSTOM SECTIONS */
+    const customBlocks = document.querySelectorAll(".custom-section");
+    data.custom_sections = Array.from(customBlocks).map(block => {
+        const title = block.querySelector("[name='section_title[]']")?.value || "";
+        const points = block.querySelector("[name='section_points[]']")?.value || "";
+        return { title, points };
+    });
+
+    return data;
+}
+
 function addCustomSection(initialData = null) {
   const container = document.getElementById("custom-section-container");
 
@@ -90,6 +131,20 @@ function addCustomSection(initialData = null) {
 
   container.appendChild(div);
   updatePreview();
+
+  if (typeof aiEnabled !== 'undefined' && aiEnabled) {
+    const aiBtn = document.createElement("button");
+    aiBtn.type = "button";
+    aiBtn.className = "btn-ai";
+    aiBtn.innerHTML = "✨ AI Suggest Content";
+    aiBtn.onclick = function(e) {
+        const textarea = div.querySelector('textarea');
+        const title = div.querySelector('input[name="section_title[]"]').value || "Custom Section";
+        const content = textarea.value || "";
+        getAiSuggestion(e, title, textarea, content);
+    };
+    div.appendChild(aiBtn);
+  }
 }
 
 /* ===============================
@@ -110,6 +165,25 @@ window.onload = function () {
     // Populate Experience
     if (initialResumeData.experience && Array.isArray(initialResumeData.experience)) {
       initialResumeData.experience.forEach(exp => addExperience(exp));
+    }
+    
+    // Populate Projects textarea if it's an array of objects (from magic parse)
+    if (initialResumeData.projects && Array.isArray(initialResumeData.projects)) {
+      const projectsField = document.querySelector("[name='projects']");
+      if (projectsField) {
+        const projectText = initialResumeData.projects.map(p => {
+          if (typeof p === 'object' && p !== null) {
+            let line = p.title || '';
+            if (p.points) {
+              const pts = Array.isArray(p.points) ? p.points.join('\n') : p.points;
+              line += (line ? '\n' : '') + pts;
+            }
+            return line;
+          }
+          return String(p);
+        }).join('\n');
+        projectsField.value = projectText;
+      }
     }
     
     // Populate Custom Sections if any
