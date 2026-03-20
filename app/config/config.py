@@ -52,6 +52,7 @@ class TestingConfig(Config):
     TESTING = True
     FLASK_ENV = "testing"
     WTF_CSRF_ENABLED = False
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
 class ProductionConfig(Config):
     """Production configuration"""

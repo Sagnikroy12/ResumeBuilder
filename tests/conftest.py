@@ -33,7 +33,7 @@ def auth_client(app):
         db.session.add(user)
         db.session.commit()
     
-    client.post('/auth/login', data={'email': 'test@test.com', 'password': 'testpass', 'remember': 'on'})
+    client.post('/auth/login', json={'email': 'test@test.com', 'password': 'testpass', 'remember': True})
     return client
 
 @pytest.fixture

@@ -1,0 +1,22 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.2, pytest-7.4.0, pluggy-1.6.0 -- D:\Freelancing\XXX\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: d:\Freelancing\XXX
+configfile: pytest.ini
+plugins: anyio-4.12.1, cov-4.1.0, flask-1.2.0
+collecting ... collected 22 items / 1 error
+
+=================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_routes.py ____________________
+ImportError while importing test module 'd:\Freelancing\XXX\tests\test_routes.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sagni\AppData\Local\Programs\Python\Python310\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_routes.py:6: in <module>
+    from app.routes.resume_routes import to_li
+E   ImportError: cannot import name 'to_li' from 'app.routes.resume_routes' (d:\Freelancing\XXX\app\routes\resume_routes.py)
+=========================== short test summary info ===========================
+ERROR tests/test_routes.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+============================== 1 error in 0.61s ===============================

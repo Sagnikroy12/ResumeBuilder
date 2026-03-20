@@ -65,7 +65,7 @@
                 <a href="{{ url_for('resume.index') }}" class="nav-link">Create Resume</a>
                 <a href="{{ url_for('dashboard.index') }}" class="nav-link">Dashboard</a>
                 {% if not current_user.is_premium %}
-                    <a href="{{ url_for('dashboard.upgrade') }}" class="nav-btn" style="background-color: #f39c12;">Upgrade to Pro</a>
+                    <a href="{{ url_for('dashboard.upgrade_pro') }}" class="nav-btn" style="background-color: #f39c12;">Upgrade to Pro</a>
                 {% endif %}
                 <a href="{{ url_for('auth.logout') }}" class="nav-link">Logout</a>
             {% else %}

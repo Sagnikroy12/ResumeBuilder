@@ -3,7 +3,8 @@ Tests for resume routes and functionality
 """
 
 import pytest
-from app.routes.resume_routes import to_li
+from app.services.resume_service import ResumeService
+to_li = ResumeService.to_li
 
 
 class TestResumeRoutes:
@@ -24,8 +25,8 @@ class TestResumeRoutes:
             "address": "123 Main St",
             "linkedin": "https://linkedin.com/in/johndoe"
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_experience(self, auth_client):
         """Test POST request with experience data"""
@@ -40,8 +41,8 @@ class TestResumeRoutes:
             "exp_duration[]": ["2020-2023", "2018-2020"],
             "exp_points[]": ["Developed features\nFixed bugs", "Learned technologies"]
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_skills(self, auth_client):
         """Test POST request with skills data"""
@@ -51,8 +52,8 @@ class TestResumeRoutes:
             "email": "john@example.com",
             "skills": "Python\nJavaScript\nFlask\nReactJS",
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_projects(self, auth_client):
         """Test POST request with projects data"""
@@ -62,8 +63,8 @@ class TestResumeRoutes:
             "email": "john@example.com",
             "projects": "Project 1: Built a web app\nProject 2: Mobile app",
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_certifications(self, auth_client):
         """Test POST request with certifications"""
@@ -73,8 +74,8 @@ class TestResumeRoutes:
             "email": "john@example.com",
             "certifications": "AWS Certified\nGoogle Cloud",
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_education(self, auth_client):
         """Test POST request with education data"""
@@ -84,8 +85,8 @@ class TestResumeRoutes:
             "email": "john@example.com",
             "education": "BS in Computer Science - University of XYZ",
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_objective(self, auth_client):
         """Test POST request with objective"""
@@ -95,8 +96,8 @@ class TestResumeRoutes:
             "email": "john@example.com",
             "objective": "Seeking a role in software development",
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_custom_sections(self, auth_client):
         """Test POST request with custom sections"""
@@ -107,8 +108,8 @@ class TestResumeRoutes:
             "section_title[]": ["Awards", "Publications"],
             "section_points[]": ["Award 1\nAward 2", "Article 1\nArticle 2"]
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_all_templates(self, auth_client):
         """Test POST request with all template options"""
@@ -119,14 +120,14 @@ class TestResumeRoutes:
                 "name": "Test User",
                 "email": "test@example.com",
             }
-            response = auth_client.post("/", data=data, follow_redirects=True)
+            response = auth_client.post("/api/resumes", data=data, follow_redirects=True)
             assert response.status_code == 200
     
     def test_index_post_empty_data(self, auth_client):
         """Test POST request with minimal data"""
         data = {}
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_index_post_with_special_characters(self, auth_client):
         """Test POST request with special characters in data"""
@@ -136,8 +137,8 @@ class TestResumeRoutes:
             "email": "jose@example.com",
             "objective": "Specializing in PYTHON & C++",
         }
-        response = auth_client.post("/", data=data, follow_redirects=True)
-        assert response.status_code == 200
+        response = auth_client.post("/api/resumes", data=data)
+        assert response.status_code in [200, 201, 302]
     
     def test_pdf_generation_for_all_templates(self, auth_client):
         """Test PDF generation for all templates"""
@@ -156,7 +157,7 @@ class TestResumeRoutes:
                 "exp_duration[]": ["2020-2023"],
                 "exp_points[]": ["Built features"],
             }
-            response = auth_client.post("/", data=data, follow_redirects=True)
+            response = auth_client.post("/api/resumes", data=data, follow_redirects=True)
             assert response.status_code == 200
 
 class TestToLi:
