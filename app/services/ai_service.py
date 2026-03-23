@@ -10,37 +10,69 @@ class AIService:
     def _get_gemini_client():
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key: return None
-        return genai.Client(api_key=api_key)
+        try:
+            # Try new google-genai style (0.3.0+)
+            return genai.Client(api_key=api_key)
+        except TypeError:
+            # Fallback for older versions if applicable
+            try:
+                return genai.Client(api_key=api_key, vertex=False)
+            except:
+                return None
+        except Exception:
+            return None
 
     @staticmethod
     def _get_openai_client():
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key: return None
-        return openai.OpenAI(api_key=api_key)
+        try:
+            # standard openai 1.0+ initialization
+            return openai.OpenAI(api_key=api_key)
+        except Exception:
+            # very old openai fallback
+            openai.api_key = api_key
+            return openai
 
     @staticmethod
     def _get_anthropic_client():
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key: return None
-        return anthropic.Anthropic(api_key=api_key)
+        try:
+            return anthropic.Anthropic(api_key=api_key)
+        except Exception:
+            return anthropic.Anthropic(api_key=api_key) # retry or handle positional
 
     @staticmethod
-    def _call_gemini(prompt, model='gemini-2.5-flash'):
+    def _call_gemini(prompt, model='gemini-2.0-flash'):
         client = AIService._get_gemini_client()
         if not client: return None
-        response = client.models.generate_content(model=model, contents=prompt)
-        return response.text.strip()
+        try:
+            response = client.models.generate_content(model=model, contents=prompt)
+            return response.text.strip()
+        except AttributeError:
+            # Fallback if using the older google-generativeai library by mistake
+            response = client.generate_content(prompt)
+            return response.text.strip()
 
     @staticmethod
     def _call_openai(prompt, model='gpt-3.5-turbo'):
         client = AIService._get_openai_client()
         if not client: return None
-        response = client.chat.completions.create(
-            model=model,
-            max_tokens=4000,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                max_tokens=2000,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except:
+            # Legacy fallback
+            response = client.ChatCompletion.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
 
     @staticmethod
     def _call_anthropic(prompt, model='claude-3-haiku-20240307'):
@@ -74,12 +106,9 @@ class AIService:
     @staticmethod
     def _call_groq(prompt, model='llama-3.3-70b-versatile'):
         client = AIService._get_groq_client()
-        if not client: 
-            print("Groq Error: API Key missing in environment")
-            return None
+        if not client: return None
         response = client.chat.completions.create(
             model=model,
-            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -87,12 +116,9 @@ class AIService:
     @staticmethod
     def _call_cerebras(prompt, model='llama3.1-8b'):
         client = AIService._get_cerebras_client()
-        if not client: 
-            print("Cerebras Error: API Key missing in environment")
-            return None
+        if not client: return None
         response = client.chat.completions.create(
             model=model,
-            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -100,13 +126,9 @@ class AIService:
     @staticmethod
     def _call_sambanova(prompt, model='Meta-Llama-3.3-70B-Instruct'):
         client = AIService._get_sambanova_client()
-        if not client: 
-            from flask import current_app
-            current_app.logger.error("SambaNova Error: API Key missing in environment")
-            return None
+        if not client: return None
         response = client.chat.completions.create(
             model=model,
-            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -123,7 +145,6 @@ class AIService:
         if not client: return None
         response = client.chat.completions.create(
             model=model,
-            max_tokens=4000,
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
