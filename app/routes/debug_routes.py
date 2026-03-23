@@ -53,3 +53,18 @@ def test_db():
             "status": "error",
             "message": f"Database test failed: {str(e)}"
         }), 500
+@debug_bp.route("/reset-db", methods=["GET"])
+def reset_db():
+    """Wipe and recreate all tables. USE WITH CAUTION."""
+    try:
+        db.drop_all()
+        db.create_all()
+        return jsonify({
+            "status": "success",
+            "message": "Database tables dropped and recreated! All data has been wiped."
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Reset failed: {str(e)}"
+        }), 500

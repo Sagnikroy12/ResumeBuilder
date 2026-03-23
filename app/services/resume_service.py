@@ -115,9 +115,11 @@ class ResumeService:
             normalized_projects = []
             for item in projects:
                 if isinstance(item, dict):
-                    points = item.get("points", "")
+                    points = item.get("points", [])
                     if isinstance(points, str):
                         item["points"] = parse_bullets(points)
+                    elif not isinstance(points, list):
+                        item["points"] = []
                     normalized_projects.append(item)
                 elif isinstance(item, str):
                     normalized_projects.append({"title": "", "points": [item]})
@@ -132,9 +134,11 @@ class ResumeService:
             for exp in experience:
                 if not isinstance(exp, dict):
                     continue
-                points = exp.get("points", "")
+                points = exp.get("points", [])
                 if isinstance(points, str):
                     exp["points"] = parse_bullets(points)
+                elif not isinstance(points, list):
+                    exp["points"] = []
                 normalized_exp.append(exp)
             data["experience"] = normalized_exp
         else:
@@ -145,9 +149,11 @@ class ResumeService:
         if isinstance(custom_sections, list):
             for section in custom_sections:
                 if isinstance(section, dict):
-                    points = section.get("points", "")
+                    points = section.get("points", [])
                     if isinstance(points, str):
                         section["points"] = parse_bullets(points)
+                    elif not isinstance(points, list):
+                        section["points"] = []
         else:
             data["custom_sections"] = []
 

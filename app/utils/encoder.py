@@ -120,8 +120,8 @@ class ResumeEncoder:
         # 4. Advanced Name Detection (Regex for 3-4 words)
         header_text = "\n".join(lines[:10]) # Look at more lines for regex
         
-        # Regex for 3-4 capitalized words separated by spaces
-        name_pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,3})\b'
+        # Regex for 2-4 capitalized words separated by spaces (e.g. Sagnik Roy)
+        name_pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b'
         matches = re.findall(name_pattern, header_text)
         
         found_name = None
