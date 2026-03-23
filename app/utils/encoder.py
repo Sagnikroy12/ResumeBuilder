@@ -55,7 +55,7 @@ class ResumeEncoder:
                 if v == clean_val:
                     return p
             
-            p_id = f"__{prefix}_{state['p_count']}__"
+            p_id = f"[[{prefix}_{state['p_count']}]]"
             state["placeholders"][p_id] = clean_val
             state["p_count"] += 1
             print(f"[ENCODER] Created placeholder: {p_id} -> {clean_val[:30]}...")

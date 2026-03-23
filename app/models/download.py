@@ -11,7 +11,7 @@ class Download(db.Model):
     __tablename__ = 'downloads'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(120), db.ForeignKey('users.email'), nullable=False)
     resume_id = db.Column(db.Integer, db.ForeignKey('resumes.id'), nullable=False)
     downloaded_at = db.Column(db.DateTime, default=get_ist_now)
 

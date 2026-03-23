@@ -164,7 +164,7 @@ class ResumeService:
         midnight_ist = ist.localize(datetime.combine(now_ist.date(), time.min))
         
         daily_generates = Resume.query.filter(
-            Resume.user_id == user.id,
+            Resume.user_id == user.email,
             Resume.created_at >= midnight_ist
         ).count()
         

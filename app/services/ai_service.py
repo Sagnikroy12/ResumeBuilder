@@ -457,8 +457,8 @@ FORMAT RULES:
         Act as an ATS parser. Extract key information from the following encoded resume text and return it as a structured JSON object.
         
         STRICT FORMATTING RULES:
-        1. REUSE any placeholders (__NAME_0__, __EMAIL_0__, etc.) and keyword codes (@EX, @SK, etc.) you find in the encoded text.
-        2. GLOSSARY: __NAME_x__ is Name, __EMAIL_x__ is Email, etc.
+        1. REUSE any placeholders ([[NAME_0]], [[EMAIL_0]], etc.) and keyword codes (@EX, @SK, etc.) you find in the encoded text.
+        2. GLOSSARY: [[NAME_x]] is Name, [[EMAIL_x]] is Email, etc.
         3. EXTRACT the FULL summary/objective. DO NOT truncate.
         4. ANTI-PII: The 'objective' field MUST NOT contain the candidate's Name, Email, Phone, or Address. If the resume starts with these, skip them and only extract the professional summary text.
         5. DO NOT combine placeholders.
@@ -531,7 +531,7 @@ FORMAT RULES:
         STRICT FORMATTING RULES:
         1. REUSE placeholders and @-codes.
         2. EXTRACT the FULL tailored summary. DO NOT truncate. Keep every detail.
-        3. CRITICAL: If you see "__NAME_0__, City", DO NOT put both in address. Split them.
+        3. CRITICAL: If you see "[[NAME_0]], City", DO NOT put both in address. Split them.
         4. DO NOT add prefix labels like 'Tailored Skill:'.
         5. DO NOT output empty bullet points.
         6. For 'skills', group them into logical categories.

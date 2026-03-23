@@ -21,12 +21,19 @@ def register():
     else:
         data = request.form
 
-    username = data.get('username')
     email = data.get('email')
     password = data.get('password')
+    # Use email as username to satisfy model constraint and ensure uniqueness
+    username = email if email else None
     
-    if not username or not email or not password:
+    if not email or not password:
         msg = "Missing required fields."
+        if request.is_json: return jsonify({"message": msg, "status": "danger"}), 400
+        flash(msg, "danger")
+        return render_template('auth/register.html')
+
+    if len(password) < 8:
+        msg = "Password must be at least 8 characters long."
         if request.is_json: return jsonify({"message": msg, "status": "danger"}), 400
         flash(msg, "danger")
         return render_template('auth/register.html')

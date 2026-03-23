@@ -5,7 +5,7 @@ class Resume(db.Model):
     __tablename__ = 'resumes'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(120), db.ForeignKey('users.email'), nullable=False)
     title = db.Column(db.String(100), nullable=False, default="My Resume")
     data = db.Column(db.Text, nullable=False) # Store resume JSON data
     template_id = db.Column(db.String(50), nullable=False, default="template1")
