@@ -251,6 +251,8 @@ def suggest():
         suggestion = AIService.get_suggestion(section, context, full_resume=full_resume)
         return success_response("Suggestion retrieved", {"suggestion": suggestion})
     except Exception as e:
+        import traceback
         current_app.logger.error(f"Error fetching AI suggestion: {str(e)}")
-        return error_response("Failed to fetch suggestion", 500)
+        current_app.logger.error(traceback.format_exc())
+        return error_response(f"AI Suggestion Error: {str(e)}", 500)
  

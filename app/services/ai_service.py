@@ -404,50 +404,55 @@ FORMAT RULES:
 - Plain professional English only.
 """
 
-        raw_response = AIService._execute_with_fallback(prompt)
-        
-        # Post-processing: Remove common AI prefixes/quotes
-        if raw_response:
-            import re
-            # Initial stripping of quotes/outer whitespace
-            clean_res = raw_response.strip().strip('"').strip("'").strip()
+        try:
+            raw_response = AIService._execute_with_fallback(prompt)
             
-            # 1. Aggressive Regex Header Stripping: 
-            # Removes patterns like "Summary:", "Role:", "IT Manager:", "Anything:"
-            # at the very beginning of the response.
-            header_regex = r"^(?i)(summary|objective|professional summary|career objective|suggestion|original role|[a-z0-9\s/&-]{2,30})[:.]\s*"
-            clean_res = re.sub(header_regex, "", clean_res, count=1).strip()
-            
-            # 2. Dynamic Role Stripping (Extra safety for specific job title)
-            role_label = (job_title or "Professional").lower()
-            if clean_res.lower().startswith(role_label):
-                check_prefix = clean_res[:len(role_label)+1].lower()
-                if check_prefix == role_label + ":" or check_prefix == role_label + ".":
-                    clean_res = clean_res[len(role_label)+1:].strip()
-
-            # 4. Experience Cleanup: Bullet Symbols, Titles, & Durations (Line-by-Line)
-            if is_experience:
-                lines = clean_res.split('\n')
-                new_lines = []
-                for line in lines:
-                    # a) Strip Bullet Symbols (*, -, •, etc.)
-                    bullet_regex = r"^[\s\-\*\•\u2022\u2023\u2043\u254b\u203b]*\s*"
-                    line = re.sub(bullet_regex, "", line).strip()
-                    
-                    # b) Remove duration patterns like "Jan 2020 - Present", "2022-2023", etc.
-                    duration_regex = r"(?i)(\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{4}\s*-\s*(present|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{4}))|(\b\d{4}\s*-\s*(present|\d{4}))"
-                    line = re.sub(duration_regex, "", line).strip()
-                    
-                    # c) Remove accidental job title repeats at the start of a line
-                    if job_title and line.lower().startswith(job_title.lower()):
-                        line = re.sub(f"^(?i){re.escape(job_title)}[:.\s-]*", "", line).strip()
-                    
-                    if line: new_lines.append(line)
-                clean_res = "\n".join(new_lines)
-
-            return clean_res
-            
-        return raw_response
+            # Post-processing: Remove common AI prefixes/quotes
+            if raw_response:
+                import re
+                # Initial stripping of quotes/outer whitespace
+                clean_res = raw_response.strip().strip('"').strip("'").strip()
+                
+                # 1. Aggressive Regex Header Stripping: 
+                # Removes patterns like "Summary:", "Role:", "IT Manager:", "Anything:"
+                # at the very beginning of the response.
+                header_regex = r"^(?i)(summary|objective|professional summary|career objective|suggestion|original role|[a-z0-9\s/&-]{2,30})[:.]\s*"
+                clean_res = re.sub(header_regex, "", clean_res, count=1).strip()
+                
+                # 2. Dynamic Role Stripping (Extra safety for specific job title)
+                role_label = (job_title or "Professional").lower()
+                if clean_res.lower().startswith(role_label):
+                    check_prefix = clean_res[:len(role_label)+1].lower()
+                    if check_prefix == role_label + ":" or check_prefix == role_label + ".":
+                        clean_res = clean_res[len(role_label)+1:].strip()
+    
+                # 4. Experience Cleanup: Bullet Symbols, Titles, & Durations (Line-by-Line)
+                if is_experience:
+                    lines = clean_res.split('\n')
+                    new_lines = []
+                    for line in lines:
+                        # a) Strip Bullet Symbols (*, -, •, etc.)
+                        bullet_regex = r"^[\s\-\*\•\u2022\u2023\u2043\u254b\u203b]*\s*"
+                        line = re.sub(bullet_regex, "", line).strip()
+                        
+                        # b) Remove duration patterns like "Jan 2020 - Present", "2022-2023", etc.
+                        duration_regex = r"(?i)(\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{4}\s*-\s*(present|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{4}))|(\b\d{4}\s*-\s*(present|\d{4}))"
+                        line = re.sub(duration_regex, "", line).strip()
+                        
+                        # c) Remove accidental job title repeats at the start of a line
+                        if job_title and line.lower().startswith(job_title.lower()):
+                            line = re.sub(f"^(?i){re.escape(job_title)}[:.\s-]*", "", line).strip()
+                        
+                        if line: new_lines.append(line)
+                    clean_res = "\n".join(new_lines)
+    
+                return clean_res
+                
+            return raw_response
+        except Exception as e:
+            import logging
+            logging.error(f"AI Suggestion Internal Error: {str(e)}")
+            return None
 
     @staticmethod
     def parse_resume(file_content):
@@ -459,7 +464,8 @@ FORMAT RULES:
         STRICT FORMATTING RULES:
         1. REUSE any placeholders ([[NAME_0]], [[EMAIL_0]], etc.) and keyword codes (@EX, @SK, etc.) you find in the encoded text.
         2. GLOSSARY: [[NAME_x]] is Name, [[EMAIL_x]] is Email, etc.
-        3. EXTRACT the FULL summary/objective. DO NOT truncate.
+        3. ANTI-HALLUCINATION: If a piece of info (Phone, Email, Address) is missing or not represented by a placeholder, leave the field EMPTY. Do NOT invent data like "123456789" or "City, Country".
+        4. EXTRACT the FULL summary/objective. DO NOT truncate.
         4. ANTI-PII: The 'objective' field MUST NOT contain the candidate's Name, Email, Phone, or Address. If the resume starts with these, skip them and only extract the professional summary text.
         5. DO NOT combine placeholders.
         6. For 'personal', only use the specific PII placeholders.
@@ -532,6 +538,7 @@ FORMAT RULES:
         1. REUSE placeholders and @-codes.
         2. EXTRACT the FULL tailored summary. DO NOT truncate. Keep every detail.
         3. CRITICAL: If you see "[[NAME_0]], City", DO NOT put both in address. Split them.
+        4. ANTI-HALLUCINATION: DO NOT invent phone numbers or addresses. Missing info = Empty string.
         4. DO NOT add prefix labels like 'Tailored Skill:'.
         5. DO NOT output empty bullet points.
         6. For 'skills', group them into logical categories.

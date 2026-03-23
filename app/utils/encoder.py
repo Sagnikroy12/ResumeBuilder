@@ -105,10 +105,11 @@ class ResumeEncoder:
         for email in set(emails):
             text = text.replace(email, get_placeholder(email, "EMAIL"))
             
-        # 2. Detect Phone Numbers
-        phones = re.findall(r'(\+?\d[\d\-\s\(\)]{8,}\d)', text)
+        # 2. Detect Phone Numbers (More lenient: allows dots, spaces, dashes)
+        phones = re.findall(r'(\+?[\d][\d\.\-\s\(\)]{7,}\d)', text)
         for phone in set(phones):
-            if len(re.sub(r'\D', '', phone)) >= 10:
+            clean_digits = re.sub(r'\D', '', phone)
+            if 7 <= len(clean_digits) <= 15:
                 text = text.replace(phone, get_placeholder(phone, "PHONE"))
 
         # 3. Detect LinkedIn URLs
@@ -135,10 +136,16 @@ class ResumeEncoder:
         if found_name:
             text = text.replace(found_name, get_placeholder(found_name, "NAME"))
 
-        # 5. Detect Addresses (City, Country/State)
-        addresses = re.findall(r'\b[A-Z][a-z]+(?: [A-Z][a-z]+)*, [A-Z]{2,}\b|\b[A-Z][a-z]+(?: [A-Z][a-z]+)*, [A-Z][a-z]+\b', text)
-        for addr in set(addresses):
-            text = text.replace(addr, get_placeholder(addr, "ADDRESS"))
+        # 5. Detect Addresses (Expanded for City, State, Country and common street suffixes)
+        address_patterns = [
+            r'\b[A-Z][a-z]+(?: [A-Z][a-z]+)*, [A-Z]{2,}\b', # City, ST
+            r'\b[A-Z][a-z]+(?: [A-Z][a-z]+)*, [A-Z][a-z]+\b', # City, Country
+            r'\d+\s+[A-Z][a-z]+\s+(?:Street|St|Avenue|Ave|Road|Rd|Way|Drive|Dr|Lane|Ln|Court|Ct)\b' # 123 Main St
+        ]
+        for pattern in address_patterns:
+            matches = re.findall(pattern, text)
+            for addr in set(matches):
+                text = text.replace(addr, get_placeholder(addr, "ADDRESS"))
 
         # 6. Apply keyword mapping
         for word, code in ResumeEncoder.KEYWORD_MAP.items():
