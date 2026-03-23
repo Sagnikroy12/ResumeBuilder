@@ -9,23 +9,21 @@ from flask_cors import CORS
 def create_app(config_name=None):
     """Application factory"""
     app = Flask(__name__)
-    # CORS configuration
-    allowed_origins = app.config.get('ALLOWED_ORIGINS', ["http://localhost:5173"])
-    CORS(app, supports_credentials=True, origins=allowed_origins)
-    
-    # Session configuration for cross-origin requests
-    # These will be set based on the environment config (Dev vs Prod)
-    app.config.update(
-        SESSION_COOKIE_SAMESITE='Lax',
-        # SESSION_COOKIE_SECURE will be set by the config object (True in production)
-    )
-    
     # Load configuration
     if config_name is None:
         config_name = os.environ.get("FLASK_ENV", "development")
     
     config = get_config(config_name)
     app.config.from_object(config)
+    
+    # CORS configuration - MUST be after config is loaded
+    allowed_origins = app.config.get('ALLOWED_ORIGINS', ["http://localhost:5173"])
+    CORS(app, supports_credentials=True, origins=allowed_origins)
+    
+    # Session configuration for cross-origin requests
+    app.config.update(
+        SESSION_COOKIE_SAMESITE='Lax',
+    )
     
     # Initialize Extensions
     db.init_app(app)
