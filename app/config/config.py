@@ -66,7 +66,7 @@ class ProductionConfig(Config):
     # Enforce secure settings in production
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'None'
     PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
     
     # In production, we should be more specific about origins

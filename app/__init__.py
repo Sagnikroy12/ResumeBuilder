@@ -21,8 +21,9 @@ def create_app(config_name=None):
     CORS(app, supports_credentials=True, origins=allowed_origins)
     
     # Session configuration for cross-origin requests
+    # Set Samesite to 'None' for cross-domain cookies (Netlify -> Render)
     app.config.update(
-        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SAMESITE='None',
     )
     
     # Initialize Extensions
