@@ -39,6 +39,9 @@ class Config:
     # API Configuration
     JSON_SORT_KEYS = False
     JSONIFY_PRETTYPRINT_REGULAR = False
+    
+    # CORS Configuration
+    ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
 class DevelopmentConfig(Config):
     """Development configuration"""
@@ -65,6 +68,9 @@ class ProductionConfig(Config):
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
+    
+    # In production, we should be more specific about origins
+    # This will be overridden by environment variable if set
 
 class StagingConfig(ProductionConfig):
     """Staging configuration - similar to production with some debugging"""
