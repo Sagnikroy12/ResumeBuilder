@@ -8,6 +8,8 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
+        if request.is_json:
+            return jsonify({"message": "Already authenticated", "status": "success"}), 200
         return redirect(url_for('dashboard.index'))
         
     if request.method == 'GET':
@@ -58,6 +60,12 @@ def register():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
+        if request.is_json:
+            return jsonify({
+                "message": "Already authenticated", 
+                "status": "success",
+                "user": {"id": current_user.id, "username": current_user.username, "email": current_user.email, "is_premium": current_user.is_premium}
+            }), 200
         return redirect(url_for('dashboard.index'))
 
     if request.method == 'GET':
