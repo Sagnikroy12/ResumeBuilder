@@ -1,47 +1,44 @@
-from google import genai
 import os
 import json
-import openai
-import anthropic
 import base64
 
 class AIService:
     @staticmethod
     def _get_gemini_client():
+        from google import genai as google_genai
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key: return None
         try:
-            # Try new google-genai style (0.3.0+)
-            return genai.Client(api_key=api_key)
-        except TypeError:
-            # Fallback for older versions if applicable
-            try:
-                return genai.Client(api_key=api_key, vertex=False)
-            except:
-                return None
-        except Exception:
+            # Try new google-genai style
+            return google_genai.Client(api_key=api_key)
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.warning(f"  [GEMINI INIT ERROR] {e}")
             return None
 
     @staticmethod
-    def _get_openai_client():
+    def _get_openai_client(base_url=None):
+        import openai
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key: return None
         try:
-            # standard openai 1.0+ initialization
+            if base_url:
+                return openai.OpenAI(api_key=api_key, base_url=base_url)
             return openai.OpenAI(api_key=api_key)
-        except Exception:
-            # very old openai fallback
-            openai.api_key = api_key
-            return openai
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.error(f"  [OPENAI INIT ERROR] {e}")
+            return None
 
     @staticmethod
     def _get_anthropic_client():
+        import anthropic
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key: return None
         try:
             return anthropic.Anthropic(api_key=api_key)
         except Exception:
-            return anthropic.Anthropic(api_key=api_key) # retry or handle positional
+            return None
 
     @staticmethod
     def _call_gemini(prompt, model='gemini-2.0-flash'):
@@ -50,104 +47,95 @@ class AIService:
         try:
             response = client.models.generate_content(model=model, contents=prompt)
             return response.text.strip()
-        except AttributeError:
-            # Fallback if using the older google-generativeai library by mistake
-            response = client.generate_content(prompt)
-            return response.text.strip()
+        except:
+            return None
 
     @staticmethod
-    def _call_openai(prompt, model='gpt-3.5-turbo'):
-        client = AIService._get_openai_client()
+    def _call_openai(prompt, model='gpt-3.5-turbo', base_url=None):
+        client = AIService._get_openai_client(base_url=base_url)
         if not client: return None
         try:
             response = client.chat.completions.create(
                 model=model,
-                max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
             )
             return response.choices[0].message.content.strip()
         except:
-            # Legacy fallback
-            response = client.ChatCompletion.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return response.choices[0].message.content.strip()
+            return None
 
     @staticmethod
     def _call_anthropic(prompt, model='claude-3-haiku-20240307'):
         client = AIService._get_anthropic_client()
         if not client: return None
-        response = client.messages.create(
-            model=model,
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.content[0].text.strip()
-
-    @staticmethod
-    def _get_groq_client():
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key: return None
-        return openai.OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
-
-    @staticmethod
-    def _get_cerebras_client():
-        api_key = os.getenv("CEREBRAS_API_KEY")
-        if not api_key: return None
-        return openai.OpenAI(api_key=api_key, base_url="https://api.cerebras.ai/v1")
-
-    @staticmethod
-    def _get_sambanova_client():
-        api_key = os.getenv("SAMBANOVA_API_KEY")
-        if not api_key: return None
-        return openai.OpenAI(api_key=api_key, base_url="https://api.sambanova.ai/v1")
+        try:
+            response = client.messages.create(
+                model=model,
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.content[0].text.strip()
+        except:
+            return None
 
     @staticmethod
     def _call_groq(prompt, model='llama-3.3-70b-versatile'):
-        client = AIService._get_groq_client()
-        if not client: return None
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
+        import openai
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key: return None
+        try:
+            client = openai.OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except:
+            return None
 
     @staticmethod
     def _call_cerebras(prompt, model='llama3.1-8b'):
-        client = AIService._get_cerebras_client()
-        if not client: return None
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
+        import openai
+        api_key = os.getenv("CEREBRAS_API_KEY")
+        if not api_key: return None
+        try:
+            client = openai.OpenAI(api_key=api_key, base_url="https://api.cerebras.ai/v1")
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except:
+            return None
 
     @staticmethod
     def _call_sambanova(prompt, model='Meta-Llama-3.3-70B-Instruct'):
-        client = AIService._get_sambanova_client()
-        if not client: return None
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
-
-    @staticmethod
-    def _get_deepseek_client():
-        api_key = os.getenv("DEEPSEEK_API_KEY")
+        import openai
+        api_key = os.getenv("SAMBANOVA_API_KEY")
         if not api_key: return None
-        return openai.OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        try:
+            client = openai.OpenAI(api_key=api_key, base_url="https://api.sambanova.ai/v1")
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except:
+            return None
 
     @staticmethod
     def _call_deepseek(prompt, model='deepseek-chat'):
-        client = AIService._get_deepseek_client()
-        if not client: return None
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
+        import openai
+        api_key = os.getenv("DEEPSEEK_API_KEY")
+        if not api_key: return None
+        try:
+            client = openai.OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except:
+            return None
 
     @staticmethod
     def _call_gemini_with_fallback(prompt):
