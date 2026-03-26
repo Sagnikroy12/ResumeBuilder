@@ -251,14 +251,46 @@ class AIService:
         bg_context_block = ""
         if full_resume:
             bg_context_block = "\n### HOLISTIC BACKGROUND CONTEXT (Entire Resume) ###\n"
+            
+            # Personal details
+            personal = full_resume.get('personal', {})
+            if isinstance(personal, dict):
+                name = personal.get('name')
+                if name: bg_context_block += f"- CANDIDATE NAME: {name}\n"
+                # If we have a career goal or current title in personal, include it
+                title = personal.get('current_title') or personal.get('job_title')
+                if title: bg_context_block += f"- CURRENT/TARGET ROLE: {title}\n"
+
             if full_resume.get('skills'):
                 bg_context_block += f"- SKILLS: {full_resume['skills']}\n"
+                
             if full_resume.get('experience'):
+                bg_context_block += "- EXPERIENCE HISTORY:\n"
                 for i, exp in enumerate(full_resume['experience']):
-                    if exp.get('title') and exp.get('points'):
-                        bg_context_block += f"- EXPERIENCE {i+1} ({exp['title']}): {exp['points'][:300]}...\n"
+                    if isinstance(exp, dict) and exp.get('title'):
+                        points_snippet = exp.get('points', '')[:300]
+                        bg_context_block += f"  * Role {i+1}: {exp['title']} | {exp.get('duration', '')} | Points: {points_snippet}...\n"
+            
             if full_resume.get('projects'):
-                bg_context_block += f"- PROJECTS: {full_resume['projects'][:300]}...\n"
+                bg_context_block += "- PROJECTS:\n"
+                for i, proj in enumerate(full_resume['projects']):
+                    if isinstance(proj, dict) and proj.get('title'):
+                        points_snippet = proj.get('points', '')[:300]
+                        bg_context_block += f"  * Project {i+1}: {proj['title']} | Points: {points_snippet}...\n"
+                        
+            if full_resume.get('education'):
+                bg_context_block += f"- EDUCATION: {full_resume['education']}\n"
+                
+            if full_resume.get('certifications'):
+                bg_context_block += f"- CERTIFICATIONS: {full_resume['certifications']}\n"
+
+            # Custom sections
+            custom_sections = full_resume.get('custom_sections', [])
+            if custom_sections and isinstance(custom_sections, list):
+                for section_data in custom_sections:
+                    if isinstance(section_data, dict) and section_data.get('title'):
+                        bg_context_block += f"- {section_data['title'].upper()}: {section_data.get('points', '')[:300]}...\n"
+            
             bg_context_block += "#################################################\n\n"
         
         # Debugging prints for terminal tracking (helpful for user troubleshooting)
@@ -273,23 +305,41 @@ class AIService:
         is_editing = bool(cleaned_content and len(cleaned_content.split()) > 5)
         is_experience = section.lower() == "experience"
 
-        # Format rules based on section
-        if is_experience:
-            format_rules = """
+        # Format rules based on section and mode
+        is_experience = section.lower() == "experience"
+        is_projects = section.lower() == "projects"
+        is_skills = section.lower() == "skills"
+        is_objective = section.lower() in ["objective", "summary", "professional summary"]
+
+        if is_experience or is_projects:
+            if is_editing:
+                format_rules = """
 - Return the EXACT SAME NUMBER of bullet points as the input.
 - DO NOT use any bullet symbols (*, -, •, etc.). 
-- Return each point on a NEW LINE only.
-- Dont include the job title and duration in the output.
-- No headers like 'Experience' or 'Professional Experience'."""
-            experience_only_rule = "- SOLELY focus on the bullet points for roles and responsibilities for and during that role."
+- Return each point on a NEW LINE only."""
+            else:
+                format_rules = """
+- Generate 3-5 high-impact bullet points.
+- DO NOT use any bullet symbols (*, -, •, etc.). 
+- Return each point on a NEW LINE only."""
+            
+            section_goal = f"roles and responsibilities for the '{section}' entry"
+            experience_only_rule = f"- SOLELY focus on the technical details and achievements for this specific {section[:-1]}."
+        elif is_skills:
+            format_rules = """
+- Return a comma-separated list of skills, or grouped by categories (e.g. 'Languages: Java, Python').
+- No bullet points.
+- No headers."""
+            section_goal = "a comprehensive and relevant skills list"
+            experience_only_rule = ""
         else:
             format_rules = """
-- Return a SINGLE paragraph (5-10 lines maximum).
+- Return a SINGLE paragraph (3-6 lines maximum).
 - No bullet points or lists.
-- No headers like 'Summary', 'Objective', or 'Professional Summary'."""
+- No headers like 'Summary' or 'Objective'."""
+            section_goal = f"a professional '{section}' statement"
             experience_only_rule = ""
         
-        # Build the transformation-only prompt
         if is_editing:
             prompt = f"""
 You are a professional resume editor, not a content creator.
@@ -309,7 +359,7 @@ STRICT CONSTRAINTS:
 - KEYWORD ANCHORING: You MUST retain and reuse all important domain-specific terms (e.g., SDET, Playwright, Selenium, REST Assured, CI/CD).
 - MANDATORY KEYWORD USAGE:
   If the input contains specific tools, technologies, role names, or domain terms, you MUST explicitly include them in the output.
-  Outputs that omit these are INVALID and must be rewritten.- Use the same bullet points and rephrase them.
+  Outputs that omit these are INVALID and must be rewritten.
 - ANTI-HALLUCINATION & IDENTITY LOCK:
   * IDENTITY LOCK: Stay strictly within the domain (e.g., SDET, Developer) found in the context. Never pivot to unrelated roles (e.g., System Admin).
   * ZERO HALLUCINATION: If specific metrics or career goals are NOT supported by the context, OMIT them. Do NOT invent/bluff data.
@@ -360,10 +410,10 @@ FINAL OUTPUT RULES:
 """
         else:
             prompt = f"""
-Generate a concise and professional resume summary for a '{job_title or 'Professional'}' role in the '{section}' section.
+Generate {section_goal} for a '{job_title or 'Professional'}' role in the '{section}' section.
 Act as a resume editor, not a content creator.
 {bg_context_block}
-Use the 'HOLISTIC BACKGROUND CONTEXT' provided above to ensure the summary is accurate to the candidate's actual skills and experience.
+Use the 'HOLISTIC BACKGROUND CONTEXT' provided above to ensure the output is highly relevant and accurate to the candidate's actual skills and experience level.
 
 STRICT CONSTRAINTS:
 - ZERO HALLUCINATION: Do NOT add niche or advanced skills, tools, technologies, certifications, or experience NOT listed in the background context.
@@ -373,11 +423,11 @@ STRICT CONSTRAINTS:
   * IDENTITY LOCK: Stay strictly within the domain (e.g., SDET, Developer) found in the context. Never pivot to unrelated roles (e.g., System Admin).
   * ZERO HALLUCINATION: If specific metrics or career goals are NOT supported by the context, OMIT them. Do NOT invent/bluff data.
   * NO REFUSAL: Never respond with conversational text, questions, or excuses (e.g., "I cannot fulfill this request").
-  * MINIMALIST FALLBACK: If context is sparse, provide a brief, factual summary based on the job title.
+  * MINIMALIST FALLBACK: If context is sparse, provide a brief, factual statement based on the job title.
 - TRACEABILITY: All statements must be logically derivable from the role and background context.
-- CORE MISSION & GOAL: The output should clearly state what the person did/does (with metrics) and the type of high-impact role/team the user is looking forward to join.
+- CORE MISSION & GOAL: The output should clearly {section_goal} and reflect the candidate's true capability.
 - MANDATORY KEYWORD USAGE:
-  If the input contains specific tools, technologies, role names, or domain terms, you MUST explicitly include them in the output.
+  If the background context contains specific tools, technologies, role names, or domain terms, you MUST explicitly include them in the output if they are relevant to this section.
   Outputs that omit these are INVALID and must be rewritten.
 
 - GENERIC OUTPUT REJECTION:
@@ -399,7 +449,7 @@ QUALITY IMPROVEMENT RULES:
 FORMAT RULES:
 {format_rules}
 - No conversational text or self-checks.
-- Return ONLY the generated summary text.
+- Return ONLY the generated text.
 - No prefixes, no titles, no explanations, no quotes.
 - Plain professional English only.
 """
@@ -451,8 +501,12 @@ FORMAT RULES:
             return raw_response
         except Exception as e:
             import logging
-            logging.error(f"AI Suggestion Internal Error: {str(e)}")
-            return None
+            logging.error(f"AI Suggestion Post-Processing/Execution Error: {str(e)}")
+            # Return raw_response if we have it, otherwise return the error as a string
+            # to avoid returning 'null' to the frontend.
+            if 'raw_response' in locals() and raw_response:
+                return raw_response
+            return f"AI Error: {str(e)}"
 
     @staticmethod
     def parse_resume(file_content):
