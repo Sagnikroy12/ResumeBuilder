@@ -26,11 +26,13 @@ def create_app(config_name=None):
         SESSION_COOKIE_SAMESITE='None',
     )
     
+    from .extensions import db, login_manager, bcrypt, migrate
+    
     # Initialize Extensions
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
-    # migrate.init_app(app, db) # Removed as per user request
+    migrate.init_app(app, db)
     
     # Ensure upload folder exists
     os.makedirs(app.config.get("UPLOAD_FOLDER", "uploads"), exist_ok=True)
