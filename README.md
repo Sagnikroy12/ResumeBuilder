@@ -459,14 +459,14 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- 📧 Email: support@resumebuilder.com
+- 📧 Email: sagnikroyofficial24@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/resume-builder/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/resume-builder/discussions)
 - 📚 Documentation: [DEPLOYMENT.md](DEPLOYMENT.md), [WORKFLOWS.md](.github/WORKFLOWS.md)
 
 ## Authors
 
-- Your Name - Initial work
+- Your Name - Sagnik Roy
 
 ## Acknowledgments
 
@@ -478,6 +478,6 @@ MIT License - see LICENSE file for details
 ---
 
 **Version**: 1.0.0  
-**Last Updated**: January 2024  
+**Last Updated**: March 2026
 **Status**: Production Ready ✅
 
