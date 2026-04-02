@@ -21,7 +21,7 @@ def register():
     else:
         data = request.form
 
-    email = data.get('email')
+    email = data.get('email', '').strip().lower()
     password = data.get('password')
     # Use email as username to satisfy model constraint and ensure uniqueness
     username = email if email else None
@@ -84,13 +84,21 @@ def login():
     else:
         data = request.form
 
-    email = data.get('email')
+    email = data.get('email', '').strip().lower()
     password = data.get('password')
     remember = data.get('remember', False)
     if isinstance(remember, str): remember = remember.lower() == 'on'
     
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if not email or not password:
+        logger.warning(f"Login attempt with missing fields. Email present: {bool(email)}, Password present: {bool(password)}")
+    
     user = User.query.filter_by(email=email).first()
+    
     if user and bcrypt.check_password_hash(user.password_hash, password):
+        logger.info(f"Login successful for user '{email}'.")
         login_user(user, remember=remember)
         
         if request.is_json:
@@ -103,6 +111,11 @@ def login():
         flash("Login Successful!", "success")
         return redirect(url_for('dashboard.index'))
     else:
+        if not user:
+            logger.warning(f"Login failed: User with email '{email}' not found.")
+        else:
+            logger.warning(f"Login failed: Password mismatch for user '{email}'.")
+            
         msg = "Login Unsuccessful. Please check email and password"
         if request.is_json:
             return jsonify({"message": msg, "status": "danger"}), 401
