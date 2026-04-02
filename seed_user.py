@@ -6,14 +6,20 @@ app = create_app()
 with app.app_context():
     email = "sagnikruproy11@gmail.com"
     username = "sagnik_master"
-    password = "password123" # Temporary password
+    password = "MasterUser" # Updated per user request
     
     # Check if user already exists
     existing = User.query.filter_by(email=email).first()
+    
+    hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+    
     if existing:
-        print(f"User {email} already exists.")
+        print(f"User {email} already exists. Updating password to: {password}")
+        existing.password_hash = hashed_pw
+        db.session.commit()
+        print(f"User {email} updated successfully!")
     else:
-        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+        print(f"Creating new user {email}...")
         new_user = User(
             username=username,
             email=email,
@@ -22,4 +28,4 @@ with app.app_context():
         )
         db.session.add(new_user)
         db.session.commit()
-        print(f"User {email} recreated successfully with temporary password: {password}")
+        print(f"User {email} created successfully with password: {password}")
