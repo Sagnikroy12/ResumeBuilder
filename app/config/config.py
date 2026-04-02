@@ -42,6 +42,9 @@ class Config:
     
     # CORS Configuration
     ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    
+    # Session Refresh
+    SESSION_REFRESH_EACH_REQUEST = True
 
 class DevelopmentConfig(Config):
     """Development configuration"""
@@ -68,6 +71,12 @@ class ProductionConfig(Config):
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'None'
     PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
+    
+    # Add explicit check for DATABASE_URL in production
+    db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        import logging
+        logging.critical("DATABASE_URL is not set in production! Falling back to local SQLite 'app.db' which is EPHEMERAL on Render.")
     
     # In production, we should be more specific about origins
     # This will be overridden by environment variable if set
