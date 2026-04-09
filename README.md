@@ -161,3 +161,16 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 **Status**: Production Ready ✅ · **Version**: 1.0.0 · **Last Updated**: April 2026
+
+### Environment & Migrations
+
+- Required env vars:
+  - SECRET_KEY - Flask session secret
+  - DATABASE_URL - SQLAlchemy database URL (example: postgresql://user:pass@host:5432/dbname)
+
+- Applying migrations (if using Flask-Migrate):
+  1. pip install -r requirements.txt
+  2. export FLASK_APP=run.py
+  3. flask db upgrade
+
+- Quick dev fallback: the app will fallback to a local SQLite `app.db` if DATABASE_URL is unset.
