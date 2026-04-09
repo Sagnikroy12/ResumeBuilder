@@ -176,3 +176,5 @@ list_*.py
 create_db.py
 final_test.py
 uploads/
+scripts/
+QUICKSTART.sh

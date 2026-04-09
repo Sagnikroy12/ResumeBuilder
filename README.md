@@ -94,39 +94,27 @@ sudo apt-get install wkhtmltopdf
 ```
 resume-builder/
 ├── app/                          # Flask application package
-│   ├── __init__.py              # App factory
+│   ├── __init__.py              # App factory (Production Secure)
 │   ├── config/
-│   │   ├── config.py            # Configuration management
-│   │   └── templates_config.py  # Template registry
+│   │   └── config.py            # Environment management
 │   ├── routes/
-│   │   └── resume_routes.py     # Resume endpoints
-│   ├── services/
-│   │   └── pdf_service.py       # PDF generation
-│   ├── utils/
-│   │   └── text_utils.py        # Utility functions
-│   ├── static/                  # CSS, JavaScript files
-│   └── templates/               # HTML templates
-├── tests/                        # Test suite
-│   ├── conftest.py              # Pytest configuration
-│   ├── test_routes.py           # Route tests
-│   ├── test_config.py           # Configuration tests
-│   ├── test_utils.py            # Utility function tests
-│   └── test_services.py         # Service tests
-├── .github/
-│   ├── workflows/               # GitHub Actions workflows
-│   │   ├── tests.yml           # Test pipeline
-│   │   ├── docker.yml          # Docker build & push
-│   │   ├── security.yml        # Security scanning
-│   │   ├── quality.yml         # Code quality
-│   │   └── deploy.yml          # Production deployment
-│   └── WORKFLOWS.md            # CI/CD documentation
-├── uploads/                     # Generated PDFs storage
+│   │   ├── auth_routes.py       # Authentication & Profiles
+│   │   ├── resume_routes.py     # Resume generation
+│   │   └── health_routes.py     # Production keep-alive
+│   └── ...
+├── docs/                         # Extended documentation
+│   ├── DEPLOYMENT.md            # Production guide
+│   ├── CONTRIBUTING.md          # Guide for contributors
+│   └── ...
+├── scripts/                      # Management & Utility scripts
+│   ├── seed_user.py             # Master user creation
+│   ├── inspect_db.py            # DB inspection tools
+│   └── ...
+├── tests/                        # Full test suite
 ├── Dockerfile                   # Container definition
 ├── docker-compose.yml          # Docker Compose configuration
-├── requirements.txt            # Python dependencies
-├── pytest.ini                  # Pytest configuration
+├── requirements.txt            # Production dependencies
 ├── run.py                      # Application entry point
-├── DEPLOYMENT.md               # Deployment guide
 └── README.md                   # This file
 ```
 
@@ -218,7 +206,7 @@ docker-compose exec web pytest tests/
 
 ### Deployment Guide
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment instructions including:
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for comprehensive deployment instructions including:
 
 - Local development setup
 - Docker setup and configuration
@@ -398,7 +386,7 @@ docker-compose logs -f web
 docker-compose down -v
 ```
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for more troubleshooting guides.
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for more troubleshooting guides.
 
 ## Performance Tips
 
@@ -420,7 +408,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for more troubleshooting guides.
 - Automated vulnerability scanning
 - SSL/TLS support
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for security best practices.
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for security best practices.
 
 ## Contributing
 
@@ -462,7 +450,7 @@ MIT License - see LICENSE file for details
 - 📧 Email: sagnikroyofficial24@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/resume-builder/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/resume-builder/discussions)
-- 📚 Documentation: [DEPLOYMENT.md](DEPLOYMENT.md), [WORKFLOWS.md](.github/WORKFLOWS.md)
+- 📚 Documentation: [DEPLOYMENT.md](docs/DEPLOYMENT.md), [WORKFLOWS.md](.github/WORKFLOWS.md)
 
 ## Authors
 
