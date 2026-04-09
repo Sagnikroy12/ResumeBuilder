@@ -1,102 +1,17 @@
-# Virtual Environment
-.venv/
-venv/
-env/
-ENV/
-.env
-.env.local
-.env.*.local
+.gitignore
 
-# Python cache
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-*.pyc
-*.pyo
-*.pyd
-
-# Distribution / packaging
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Uploads directory
-uploads/*
-!uploads/.gitkeep
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-*.sublime-project
-*.sublime-workspace
-
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Database and logs
-*.db
-*.sqlite3
-*.log
-
-# Tools
-wkhtmltopdf*
-*.exe
-
-# Notebooks
-*.ipynb
-
-# Testing
-.pytest_cache/
-.tox/
-.coverage
-.coverage.*
-htmlcov/
-.hypothesis/
-nosetests.xml
-coverage.xml
-*.cover
-
-# Code quality
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pylint.d/
-
-# Package files
-Pipfile.lock
-
-# Docker
-docker-compose.override.yml
-
-# CI/CD artifacts
-*.sarif
-bandit-report.json
-complexity.json
-metrics.json
-
-# Generated files
-*.pdf
-*.tmp
-
+# Debug and scratch files
+gh_api_response*.json
+error.txt
+error_utf8.txt
+pytest_out.txt
+models_list.txt
+schema_info.txt
+*_test.py
+seed_*.py
+inspect_*.py
+verify_*.py
+check_*.py
+list_*.py
+create_db.py
+final_test.py
