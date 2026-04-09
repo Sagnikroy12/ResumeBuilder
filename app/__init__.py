@@ -41,10 +41,15 @@ def create_app(config_name=None):
     from .routes.auth_routes import auth_bp
     from .routes.dashboard_routes import dashboard_bp
     from .routes.debug_routes import debug_bp
+    from .routes.health_routes import health_bp
     app.register_blueprint(resume_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp)
-    app.register_blueprint(debug_bp)
+    app.register_blueprint(health_bp)
+    
+    # Only register debug routes if app is in debug mode
+    if app.debug:
+        app.register_blueprint(debug_bp)
     
     # Create database tables within app context
     with app.app_context():

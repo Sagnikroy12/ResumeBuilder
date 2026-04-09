@@ -69,7 +69,3 @@ def reset_db():
             "message": f"Reset failed: {str(e)}"
         }), 500
 
-@debug_bp.route("/health", methods=["GET"])
-def health_check():
-    """Simple health check endpoint for UptimeRobot."""
-    return jsonify({"status": "ok", "message": "Backend is awake!"}), 200
