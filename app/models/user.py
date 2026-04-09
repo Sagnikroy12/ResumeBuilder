@@ -61,7 +61,10 @@ class User(UserMixin, db.Model):
         """Verify password against stored hash."""
         if not self.password_hash:
             return False
-        return bcrypt.check_password_hash(self.password_hash, password)
+            
+        # Clean up any malformed stored hash (remove spaces/newlines introduced by manual DB inserts)
+        cleaned_hash = "".join(self.password_hash.split())
+        return bcrypt.check_password_hash(cleaned_hash, password)
 
     def __repr__(self):
         return f'<User {self.email}>'
