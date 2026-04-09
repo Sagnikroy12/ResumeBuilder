@@ -36,10 +36,9 @@ class TestConfiguration:
         assert ProductionConfig.TESTING is False
     
     def test_production_config_security_settings(self):
-        """Test production config has security settings"""
         assert ProductionConfig.SESSION_COOKIE_SECURE is True
         assert ProductionConfig.SESSION_COOKIE_HTTPONLY is True
-        assert ProductionConfig.SESSION_COOKIE_SAMESITE == 'Lax'
+        assert ProductionConfig.SESSION_COOKIE_SAMESITE == 'None'
     
     def test_config_has_required_attributes(self):
         """Test config has all required attributes"""

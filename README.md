@@ -107,8 +107,17 @@ python -m venv venv
 .\venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 
-# Configure
+# Configure Environment
 cp .env.example .env           # Edit with your API keys
+# IMPORTANT: You must export the following env vars or set them in .env:
+# FLASK_ENV=development
+# SECRET_KEY=your-secret-key
+# DATABASE_URL=postgresql://user:pass@host:5432/dbname (or sqlite will be used locally)
+
+# Initialize / Reset Database (If you encounter login/register schemas errors)
+flask db upgrade               # Apply migrations
+# OR to completely reset tables (Warning: Drops all data):
+# python scripts/reset_remote_db.py
 
 # Run
 python run.py                  # http://localhost:5000
