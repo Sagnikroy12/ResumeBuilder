@@ -23,6 +23,23 @@
                 <label for="resume_file" class="form-label">Select Resume File</label>
                 <input class="form-control" type="file" id="resume_file" name="resume_file" accept=".pdf,.doc,.docx,.txt" required>
             </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Parsing Method</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="use_ai" id="use_ai_true" value="true" checked>
+                    <label class="form-check-label" for="use_ai_true">
+                        🤖 AI Parse (recommended - extracts with better structure)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="use_ai" id="use_ai_false" value="false">
+                    <label class="form-check-label" for="use_ai_false">
+                        ⚡ Basic Parse (no AI - works offline without API keys)
+                    </label>
+                </div>
+            </div>
+            
             <button type="submit" class="btn btn-primary">Upload and Parse</button>
             <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
         </form>

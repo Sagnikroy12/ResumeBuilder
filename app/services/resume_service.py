@@ -194,11 +194,12 @@ class ResumeService:
         
         # Priority: explicit 'template' in raw_data > 'template' in normalized_data > 'template_id' in existing record > default
         new_template = raw_data.get('template') or normalized_data.get('template')
-        # Extract first name for title (before any processing)
-        full_name = normalized_data.get('name', 'My')
-        first_name = full_name.split()[0] if full_name else 'My'
         
-        new_title = raw_data.get('title') or normalized_data.get('title') or f"{first_name}'s Resume"
+        # Extract first name for title - try both raw_data and normalized_data
+        full_name = raw_data.get('name') or normalized_data.get('name') or ''
+        first_name = full_name.split()[0].strip("'s") if full_name else ''
+        
+        new_title = raw_data.get('title') or normalized_data.get('title') or (f"{first_name}'s Resume" if first_name else "My Resume")
 
         if resume_id:
             existing = Resume.query.filter_by(id=resume_id, user_id=user_id).first()

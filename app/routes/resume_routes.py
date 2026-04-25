@@ -187,9 +187,16 @@ def upload():
         if not content:
             current_app.logger.error("Text extraction returned empty or None")
             return error_response("Could not extract text from file", 400)
-            
-        current_app.logger.info(f"Extracted {len(content)} characters. Sending to AI for parsing...")
-        extracted_data = AIService.parse_resume(content)
+        
+        use_ai = request.form.get('use_ai', 'true').lower() != 'false'
+        
+        if use_ai:
+            current_app.logger.info(f"Extracted {len(content)} characters. Sending to AI for parsing...")
+            extracted_data = AIService.parse_resume(content)
+        else:
+            from app.utils.text_utils import parse_resume_basic
+            current_app.logger.info(f"Extracted {len(content)} characters. Using basic parser (no AI)...")
+            extracted_data = parse_resume_basic(content)
         
         if isinstance(extracted_data, dict) and "error" not in extracted_data:
             current_app.logger.info(f"Resume parsed successfully for user {current_user.id}")
@@ -197,8 +204,8 @@ def upload():
             return success_response("Resume successfully parsed!", {"extracted_data": normalized_data})
         else:
             error_msg = extracted_data.get('error') if isinstance(extracted_data, dict) else extracted_data
-            current_app.logger.error(f"AI parsing failed with: {error_msg}")
-            return error_response(f"AI Parsing Error: {error_msg}", 500)
+            current_app.logger.error(f"Parsing failed with: {error_msg}")
+            return error_response(f"Parsing Error: {error_msg}", 500)
     except Exception as e:
         current_app.logger.error(f"Critical error during upload/parsing: {str(e)}", exc_info=True)
         return error_response(f"Unexpected error: {str(e)}", 500)
