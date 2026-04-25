@@ -1,7 +1,7 @@
+import os
 from flask import render_template
 import pdfkit
 
-import os
 import platform
 import shutil
 
@@ -13,7 +13,6 @@ else:
     wkhtmltopdf_path = shutil.which("wkhtmltopdf") or "/usr/bin/wkhtmltopdf"
 
 config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-
 options = {
     "page-size": "A4",
     "margin-top": "0.8in",
