@@ -20,10 +20,13 @@ def create_app(config_name=None):
     allowed_origins = app.config.get('ALLOWED_ORIGINS', ["http://localhost:5173"])
     CORS(app, supports_credentials=True, origins=allowed_origins)
     
-    # Session configuration for cross-origin requests
-    # Set Samesite to 'None' for cross-domain cookies (Netlify -> Render)
+    # Session cookie policy must vary by environment:
+    # - Production cross-site auth (HTTPS): SameSite=None + Secure
+    # - Local/dev (HTTP): SameSite=Lax, otherwise browsers reject the cookie
+    is_production = app.config.get("FLASK_ENV") == "production"
     app.config.update(
-        SESSION_COOKIE_SAMESITE='None',
+        SESSION_COOKIE_SAMESITE='None' if is_production else 'Lax',
+        SESSION_COOKIE_SECURE=True if is_production else False,
     )
     
     from .extensions import db, login_manager, bcrypt, migrate
