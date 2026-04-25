@@ -51,6 +51,8 @@ class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
     FLASK_ENV = "development"
+    # Ensure local development always uses local SQLite
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.basedir, '..', '..', 'app.db')
 
 class TestingConfig(Config):
     """Testing configuration"""
