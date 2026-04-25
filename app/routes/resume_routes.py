@@ -14,6 +14,11 @@ import pytz
 resume_bp = Blueprint("resume", __name__)
 
 
+def build_resume_title(name: str) -> str:
+    clean_name = (name or "").strip()
+    return clean_name if clean_name else "My Resume"
+
+
 def to_li(items):
     """Convert list of strings into HTML <li> elements with bold formatting before colons"""
     result = []
@@ -129,9 +134,10 @@ def index():
         # ---------- SAVE TO DB INSTEAD OF DOWNLOAD ----------
         
         # Save resume data as JSON string
+        resume_name = resume_data.get("personal", {}).get("name", "")
         new_resume = Resume(
             user_id=current_user.id,
-            title=f"{resume_data['personal']['name']}'s Resume",
+            title=build_resume_title(resume_name),
             data=json.dumps(resume_data)
         )
         db.session.add(new_resume)

@@ -13,6 +13,15 @@ import pytz
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
+
+def build_download_filename(resume, resume_data):
+    personal_name = (resume_data.get("personal", {}).get("name", "") or "").strip()
+    if personal_name:
+        return f"{personal_name}.pdf"
+
+    fallback_title = (resume.title or "").strip() or "My Resume"
+    return f"{fallback_title}.pdf"
+
 @dashboard_bp.route("/dashboard")
 @login_required
 def index():
@@ -75,10 +84,11 @@ def reconstruct_and_send_pdf(resume):
     template_file = get_template_file(template_name)
     
     pdf = generate_pdf(resume_data, template_file)
+    download_filename = build_download_filename(resume, resume_data)
     
     return send_file(
         BytesIO(pdf),
-        download_name=f"{resume.title}.pdf",
+        download_name=download_filename,
         as_attachment=True,
         mimetype="application/pdf"
     )
