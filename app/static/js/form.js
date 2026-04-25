@@ -103,6 +103,7 @@ function getFormData() {
     data.skills = document.querySelector("[name='skills']")?.value || "";
     data.education = document.querySelector("[name='education']")?.value || "";
     data.projects = document.querySelector("[name='projects']")?.value || "";
+    data.template = document.getElementById("template")?.value || "template1";
 
     /* EXPERIENCE */
     const expBlocks = document.querySelectorAll(".exp-block");

@@ -181,52 +181,49 @@ class ResumeService:
 
     @staticmethod
     def create_resume(user_id, raw_data):
-        """Process and save/update a resume with versioning logic."""
+        """Process and save/update a resume. Overwrites existing record if ID is provided."""
         normalized_data = ResumeService.normalize_resume_data(raw_data)
         resume_id = raw_data.get('id') or raw_data.get('resume_id')
         
-        # Strip meta fields from comparison to ensure bit-perfect content check
+        # Strip meta fields from JSON storage to keep data clean
         comparison_data = normalized_data.copy()
         for k in ('id', 'resume_id', 'template', 'title', 'usedAi'):
             comparison_data.pop(k, None)
             
         new_data_json = json.dumps(comparison_data, sort_keys=True)
-        new_template = normalized_data.get('template', raw_data.get('template', 'template1'))
-        new_title = normalized_data.get('title', raw_data.get('title', f"{normalized_data.get('personal', {}).get('name', 'My')}'s Resume"))
-
-        current_app.logger.info(f"--- Smart Save Check (User: {user_id}, ID: {resume_id}) ---")
         
+        # Priority: explicit 'template' in raw_data > 'template' in normalized_data > 'template_id' in existing record > default
+        new_template = raw_data.get('template') or normalized_data.get('template')
+        new_title = raw_data.get('title') or normalized_data.get('title') or f"{normalized_data.get('name', 'My')}'s Resume"
+
         if resume_id:
             existing = Resume.query.filter_by(id=resume_id, user_id=user_id).first()
             if existing:
-                existing_data = json.loads(existing.data)
-                # Strip EVERYTHING that is stored in separate columns from the comparison
-                for k in ('id', 'resume_id', 'template', 'title', 'usedAi'):
-                    existing_data.pop(k, None)
-                    
-                existing_data_json = json.dumps(existing_data, sort_keys=True)
+                current_app.logger.info(f"Updating existing resume {resume_id} (User: {user_id})")
                 
-                # Check for absolute equality in content AND template AND title
-                is_same_content = (existing_data_json == new_data_json)
-                is_same_template = (existing.template_id == new_template)
-                is_same_title = (existing.title == new_title)
-
-                if is_same_content and is_same_template and is_same_title:
-                    current_app.logger.info("NO CHANGES DETECTED. Overwriting existing resume.")
-                    existing.used_ai = existing.used_ai or raw_data.get('usedAi', False)
-                    db.session.commit()
-                    return existing
-                else:
-                    current_app.logger.info(f"CHANGES DETECTED. Content: {is_same_content}, Template: {is_same_template}, Title: {is_same_title}. Creating NEW version.")
+                # If template was not provided in POST, keep the existing one
+                final_template = new_template or existing.template_id or 'template1'
+                
+                current_app.logger.info(f"Saving resume {resume_id} with template: {final_template}")
+                
+                existing.data = new_data_json
+                existing.template_id = final_template
+                existing.title = new_title
+                existing.used_ai = existing.used_ai or raw_data.get('usedAi', False)
+                db.session.commit()
+                return existing
             else:
                 current_app.logger.warning(f"Resume ID {resume_id} provided but not found for user {user_id}. Creating new.")
 
-        # Create new record
+        # Create new record if no ID or ID not found
+        final_template = new_template or 'template1'
+        current_app.logger.info(f"Creating new resume for user {user_id} with template: {final_template}")
+        
         new_resume = Resume(
             user_id=user_id,
             title=new_title,
             data=new_data_json,
-            template_id=new_template,
+            template_id=final_template,
             used_ai=raw_data.get('usedAi', False)
         )
         

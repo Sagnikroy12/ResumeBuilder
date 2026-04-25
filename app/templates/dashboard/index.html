@@ -85,7 +85,7 @@
             <div class="resume-card">
                 <div class="resume-preview-container">
                     <div class="preview-loading">Rendering...</div>
-                    <iframe src="{{ url_for('resume.render_view', resume_id=resume.id) }}" class="resume-mini-preview" onload="this.previousElementSibling.style.display='none'"></iframe>
+                    <iframe src="{{ url_for('resume.render_view', resume_id=resume.id) }}?v={{ resume.updated_at.timestamp()|int }}" class="resume-mini-preview" onload="this.previousElementSibling.style.display='none'"></iframe>
                     <div class="preview-overlay">
                         <a href="{{ url_for('resume.index', id=resume.id) }}" class="btn-edit-overlay">✍️ Edit</a>
                     </div>
