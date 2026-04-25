@@ -41,7 +41,7 @@ class Config:
     JSONIFY_PRETTYPRINT_REGULAR = False
     
     # CORS Configuration
-    ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
     
     # Session Refresh
     SESSION_REFRESH_EACH_REQUEST = True

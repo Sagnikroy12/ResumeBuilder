@@ -17,16 +17,19 @@ def create_app(config_name=None):
     app.config.from_object(config)
     
     # CORS configuration - MUST be after config is loaded
-    allowed_origins = app.config.get('ALLOWED_ORIGINS', ["http://localhost:5173"])
+    default_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    allowed_origins = app.config.get('ALLOWED_ORIGINS', default_origins)
     CORS(app, supports_credentials=True, origins=allowed_origins)
     
     # Session cookie policy must vary by environment:
-    # - Production cross-site auth (HTTPS): SameSite=None + Secure
-    # - Local/dev (HTTP): SameSite=Lax, otherwise browsers reject the cookie
+    # - Local/dev (HTTP): SameSite=None + Secure=True works on localhost in most browsers
+    # - Production cross-site auth (HTTPS): SameSite=None + Secure=True
     is_production = app.config.get("FLASK_ENV") == "production"
+    
     app.config.update(
-        SESSION_COOKIE_SAMESITE='None' if is_production else 'Lax',
-        SESSION_COOKIE_SECURE=True if is_production else False,
+        SESSION_COOKIE_SAMESITE='None',
+        SESSION_COOKIE_SECURE=True, # Modern browsers allow Secure cookies on localhost over HTTP
+        SESSION_COOKIE_HTTPONLY=True,
     )
     
     from .extensions import db, login_manager, bcrypt, migrate
