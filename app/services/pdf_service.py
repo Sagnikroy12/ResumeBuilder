@@ -16,10 +16,10 @@ config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
 
 options = {
     "page-size": "A4",
-    "margin-top": "0.5in",
-    "margin-bottom": "0.5in",
-    "margin-left": "0.5in",
-    "margin-right": "0.5in",
+    "margin-top": "0.8in",
+    "margin-bottom": "0.8in",
+    "margin-left": "0.8in",
+    "margin-right": "0.8in",
     "encoding": "UTF-8",
     "disable-smart-shrinking": "",
     "zoom": "1.0",
