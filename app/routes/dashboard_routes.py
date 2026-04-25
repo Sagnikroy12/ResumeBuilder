@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 import json
+import time
 from io import BytesIO
 
 from app.models.resume import Resume
@@ -35,7 +36,7 @@ def index():
     """Render the main dashboard HTML."""
     resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.created_at.desc()).all()
     templates = get_all_templates()
-    return render_template("dashboard/index.html", resumes=resumes, templates=templates)
+    return render_template("dashboard/index.html", resumes=resumes, templates=templates, now=int(time.time()))
 
 @dashboard_bp.route("/api/dashboard")
 @login_required

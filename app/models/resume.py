@@ -12,7 +12,6 @@ class Resume(db.Model):
     used_ai = db.Column(db.Boolean, default=False)
     file_path = db.Column(db.String(255), nullable=True) # Path if physical file generated
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
         return f'<Resume {self.title} (User ID: {self.user_id})>'
