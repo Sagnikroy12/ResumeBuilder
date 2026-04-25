@@ -74,11 +74,8 @@ class ProductionConfig(Config):
     SESSION_COOKIE_SAMESITE = 'None'
     PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
     
-    # Add explicit check for DATABASE_URL in production
-    db_url = os.environ.get('DATABASE_URL')
-    if not db_url:
-        import logging
-        logging.critical("DATABASE_URL is not set in production! Falling back to local SQLite 'app.db' which is EPHEMERAL on Render.")
+    # SQLALCHEMY_DATABASE_URI will be set via the parent Config class logic
+    # which already handles the postgresql:// replacement.
     
     # In production, we should be more specific about origins
     # This will be overridden by environment variable if set
