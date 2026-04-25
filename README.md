@@ -119,8 +119,10 @@ flask db upgrade               # Apply migrations
 # OR to completely reset tables (Warning: Drops all data):
 # python scripts/reset_remote_db.py
 
-# Run
-python run.py                  # http://localhost:5000
+# Run (branch-aware env)
+python scripts/run-backend-branch.py   # http://localhost:5000
+# Fallback direct run:
+# python run.py
 ```
 
 ### Docker
